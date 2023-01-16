@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\ErrorLog;
 use App\Models\Log;
 use App\Models\Referral;
 use App\Models\User;
+use App\Models\UserPrivilege;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 
@@ -17,43 +18,49 @@ class ReferralController extends Controller
 {
     public function login(Request $request)
     {
-        $credentials = [
-            'username' => $request->username,
-            'password' => $request->password];
-
-        if (Auth::attempt($credentials)) {
-            //GET USER ACCESS
-            $user = Auth::user();
-            $user->role = "TRIAGGE";
-            $user->topic = "TRIAGGE";
-            $access_rights = DB::table('access_rights')
-                ->join('departments', 'access_rights.department_id', '=', 'departments.id')
-                ->where('userid', $user->id)->get()->first();
-            if ($access_rights) {
-                $user->role = $access_rights->department;
-                $user->topic = $access_rights->code;
-                if ($access_rights->role == 1) {
-                    $user->role = "MANAGEMENT";
-                    $user->topic = "MANAGEMENT";
+        try {
+            $credentials = ['username' => $request->username, 'password' => $request->password];
+            if (Auth::attempt($credentials)) {
+                $user_priv = UserPrivilege::where([['user_id', Auth::id()], ['syscode', 'notifier']])->get()->first();
+                if ($user_priv == null) {
+                    Auth::logout();
+                    return ['code' => 500, 'message' => 'Access denied'];
                 }
-            }
 
-            return ['code' => 200, 'result' => $user];
+                $user = Auth::user();
+                $user->role = $user_priv->level;
+                $user->topic = $user_priv->level;
+
+                #CHECK IF USER IS DEPARTMENT/DOCTORS
+                if($user_priv->level != 'TRIAGGE' && $user_priv->level != 'MANAGEMENT'){
+                    $department = Department::where('code', $user_priv->level)->first();
+                    if ($department) {
+                        $user->role = $department->department;
+                    }
+                }
+                return ['code' => 200, 'result' => $user];
+            }
+            return ['code' => 500, 'message' => 'Invalid credentials'];
+        } catch (\Exception $exception) {
+            return ['code' => 500, 'message' => 'Server Error'];
         }
-        return ['code' => 500, 'message' => 'Invalid credentials'];
     }
 
     public function change_password(Request $request)
     {
-        $user = User::find($request->id);
-        if (!Hash::check($request->old_password, $user->password)) {
+        try {
+            $user = User::find($request->id);
+            if (!Hash::check($request->old_password, $user->password)) {
 
-            return ['code' => 500, 'message' => 'Incorrect old password'];
+                return ['code' => 500, 'message' => 'Incorrect old password'];
+            }
+
+            $user->password = bcrypt($request->new_password);
+            $user->save();
+            return ['code' => 200, 'message' => 'Password successfully changed'];
+        } catch (\Exception $exception) {
+            return ['code' => 500, 'message' => 'Server Error'];
         }
-
-        $user->password = bcrypt($request->new_password);
-        $user->save();
-        return ['code' => 200, 'message' => 'Password successfully changed'];
     }
 
     public function insert_referral(Request $request)

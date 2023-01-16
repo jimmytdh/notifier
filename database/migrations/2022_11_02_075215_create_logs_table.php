@@ -13,6 +13,7 @@ return new class extends Migration {
     public function up()
     {
         Schema::create('logs', function (Blueprint $table) {
+
             $table->id();
             $table->foreignId('referral_id')->constrained()->cascadeOnDelete();
             $table->integer('forwarded_by');
