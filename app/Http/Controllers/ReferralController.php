@@ -32,7 +32,7 @@ class ReferralController extends Controller
                 $user->topic = $user_priv->level;
 
                 #CHECK IF USER IS DEPARTMENT/DOCTORS
-                if($user_priv->level != 'TRIAGGE' && $user_priv->level != 'MANAGEMENT'){
+                if ($user_priv->level != 'TRIAGGE' && $user_priv->level != 'MANAGEMENT') {
                     $department = Department::where('code', $user_priv->level)->first();
                     if ($department) {
                         $user->role = $department->department;
