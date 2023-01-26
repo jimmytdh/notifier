@@ -82,8 +82,17 @@ class ReferralController extends Controller
             $referral->chief_complaint = $request->chief_complaint;
             $referral->department = $request->department;
             $referral->referring_hospital = $request->referring_hospital;
-            $referral->date_created = $request->date_created;
+            $referral->date_created = Carbon::now();
             $referral->save();
+
+            $logs = new Log;
+            $logs->referral_id = $referral->id;
+            $logs->forwarded_by = 0;
+            $logs->origin = $request->referring_hospital;
+            $logs->destination = 'TRIAGGE';
+            $logs->remarks = '';
+            $logs->date_forwarded = $request->date_created;
+            $logs->save();
 
             $logs = new Log;
             $logs->referral_id = $referral->id;
