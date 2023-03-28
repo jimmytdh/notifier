@@ -9,6 +9,9 @@ class Referral extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql';
+    protected $table = 'referrals';
+
     protected $fillable = [
         'firebase_key',
         'patient',

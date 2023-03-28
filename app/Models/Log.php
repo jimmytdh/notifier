@@ -9,6 +9,9 @@ class Log extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql';
+    protected $table = 'logs';
+
     protected $fillable = [
         'referral_id',
         'forwarded_by',

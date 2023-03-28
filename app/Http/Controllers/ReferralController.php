@@ -51,10 +51,8 @@ class ReferralController extends Controller
         try {
             $user = User::find($request->id);
             if (!Hash::check($request->old_password, $user->password)) {
-
                 return ['code' => 500, 'message' => 'Incorrect old password'];
             }
-
             $user->password = bcrypt($request->new_password);
             $user->save();
             return ['code' => 200, 'message' => 'Password successfully changed'];
@@ -71,7 +69,6 @@ class ReferralController extends Controller
             if ($referral) {
                 return ['code' => 500, 'message' => 'Referral already added'];
             }
-
             $referral = new Referral;
             $referral->userid = $request->userid;
             $referral->firebase_key = $request->firebase_key;
@@ -121,7 +118,7 @@ class ReferralController extends Controller
                 return ['code' => 500, 'message' => 'Cannot forward, referral no longer belongs to your department'];
             }
 
-            $_logs = Log::where([['referral_id', '=', $referral->id], ['origin', '=', $referral->id]])->get()->last();
+            $_logs = Log::where([['referral_id', '=', $referral->id], ['origin', '=', $referral->department]])->get()->last();
             if ($_logs) {
                 $_logs->date_tagged = Carbon::now()->toDateTimeString();
                 $_logs->save();
@@ -215,5 +212,156 @@ class ReferralController extends Controller
         $error_logs->userid = $id;
         $error_logs->message = $message;
         $error_logs->save();
+    }
+
+
+    #WEB API
+    public function insertError($message)
+    {
+        $error_logs = new ErrorLog;
+        $error_logs->userid = Auth::id();
+        $error_logs->message = $message;
+        $error_logs->save();
+    }
+
+    public function insertReferral(Request $request)
+    {
+        try {
+            $referral = Referral::where('firebase_key', $request->firebase_key)->first();
+            if ($referral) {
+                return response(['code' => 500, 'message' => 'Referral already added']);
+            }
+
+            $referral = new Referral;
+            $referral->userid = Auth::id();
+            $referral->firebase_key = $request->firebase_key;
+            $referral->patient = $request->patient;
+            $referral->gender = $request->gender;
+            $referral->age = $request->age;
+            $referral->diagnosis = $request->diagnosis;
+            $referral->chief_complaint = $request->chief_complaint;
+            $referral->department = $request->department;
+            $referral->referring_hospital = $request->referring_hospital;
+            $referral->date_created = Carbon::now();
+            $referral->save();
+
+            $logs = new Log;
+            $logs->referral_id = $referral->id;
+            $logs->forwarded_by = 0;
+            $logs->origin = $request->referring_hospital;
+            $logs->destination = 'TRIAGGE';
+            $logs->remarks = '';
+            $logs->date_forwarded = $request->date_created;
+            $logs->save();
+
+            $logs = new Log;
+            $logs->referral_id = $referral->id;
+            $logs->forwarded_by = Auth::id();
+            $logs->origin = 'TRIAGGE';
+            $logs->destination = $request->department;
+            $logs->remarks = $request->remarks;
+            $logs->save();
+            self::insertError('New referral added sheeesh');
+            return response(['code' => 200, 'message' => 'New referral added ' . $referral->id]);
+        } catch (\Exception $exception) {
+
+            return response(['code' => 500, 'message' => $exception->getMessage()]);
+        }
+    }
+
+    public function forwardReferral(Request $request)
+    {
+        try {
+            $referral = Referral::find($request->id);
+            if (!$referral) {
+                return ['code' => 401, 'message' => 'Referral not found'];
+            }
+
+            if (session('access_rights') != $referral->department) {
+                return ['code' => 500, 'message' => 'Cannot forward, referral no longer belongs to your department'];
+            }
+
+            $_logs = Log::where([['referral_id', '=', $referral->id], ['origin', '=', $referral->department]])->get()->last();
+            if ($_logs) {
+                $_logs->date_tagged = Carbon::now()->toDateTimeString();
+                $_logs->save();
+            }
+
+            $logs = new Log;
+            $logs->referral_id = $referral->id;
+            $logs->forwarded_by = Auth::id();
+            $logs->origin = session('access_rights');
+            $logs->destination = $request->destination;
+            $logs->remarks = $request->remarks;
+            $logs->save();
+
+            $referral->department = $request->destination;
+            $referral->save();
+            return response(['code' => 200, 'message' => 'Referral forwarded successfully']);
+        } catch (\Exception $err) {
+            self::insert_error(Auth::id(), $err->getMessage());
+            return response(['code' => 500, 'message' => $err->getMessage()]);
+        }
+    }
+
+    public function tagAsDone(Request $request)
+    {
+        try {
+            $referral = Referral::find($request->id);
+            if (!$referral) {
+                return ['code' => 401, 'message' => 'Referral not found'];
+            }
+
+            $logs = Log::where('referral_id', $referral->id)->get()->first();
+            if (!$logs) {
+                return ['code' => 401, 'message' => 'Referral not found'];
+            }
+
+            $logs->tagged_by = Auth::id();
+            $logs->remarks = "DONE";
+            $logs->save();
+
+            $referral->status = "DONE";
+            $referral->save();
+
+            return ['code' => 200, 'message' => 'Tagged successfully'];
+        } catch (\Exception $err) {
+            self::insertError($err->getMessage());
+            return ['code' => 500, 'message' => $err->getMessage()];
+        }
+    }
+
+    public function getReferrals(Request $request)
+    {
+        try {
+            $referrals = Referral::
+            where('department', session('access_rights'))
+                ->whereNull('status')
+                ->get();
+            return response(['code' => 200, 'results' => $referrals]);
+        } catch (\Exception $exception) {
+            return response(['code' => 500, 'message' => $exception->getMessage()]);
+        }
+    }
+
+    public function getAllReferrals(Request $request)
+    {
+        try {
+            $referrals = Referral::get();
+            return response(['code' => 200, 'results' => $referrals]);
+        } catch (\Exception $exception) {
+            return response(['code' => 500, 'message' => $exception->getMessage()]);
+        }
+    }
+
+    public function loadLogs(Request $request)
+    {
+        $referral = Referral::find($request->id);
+        if (!$referral) {
+            return ['code' => 401, 'message' => 'Referral not found'];
+        }
+
+        $columns = ['origin', 'destination', 'remarks', 'date_tagged', 'date_forwarded'];
+        return ['code' => 200, 'results' => Log::where('referral_id', '=', $referral->id)->get($columns)];
     }
 }
