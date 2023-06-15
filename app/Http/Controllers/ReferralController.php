@@ -12,7 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-
+use Kreait\Firebase\Factory;
 
 class ReferralController extends Controller
 {
@@ -58,6 +58,40 @@ class ReferralController extends Controller
             return ['code' => 200, 'message' => 'Password successfully changed'];
         } catch (\Exception $exception) {
             return ['code' => 500, 'message' => 'Server Error'];
+        }
+    }
+
+    public function insert_referral_5pm(Request $request)
+    {
+        try {
+            $referral = Referral::where('firebase_key', $request->firebase_key)->first();
+            if (!$referral) {
+                $referral = new Referral;
+                $referral->userid = 99999;
+                $referral->firebase_key = $request->firebase_key;
+                $referral->patient = $request->patient;
+                $referral->gender = $request->gender;
+                $referral->age = $request->age;
+                $referral->diagnosis = $request->diagnosis;
+                $referral->chief_complaint = $request->chief_complaint;
+                $referral->department = $request->department;
+                $referral->referring_hospital = $request->referring_hospital;
+                $referral->date_created = Carbon::now();
+                $referral->save();
+
+                $logs = new Log;
+                $logs->referral_id = $referral->id;
+                $logs->forwarded_by = 0;
+                $logs->origin = $request->referring_hospital;
+                $logs->destination = 'ER';
+                $logs->remarks = '';
+                $logs->date_forwarded = Carbon::now();
+                $logs->save();
+            }
+            return ['code' => 200, 'message' => 'New referral added'];
+        } catch (\Exception $err) {
+            $this->insert_error(99999, $err);
+            return ['code' => 500, 'message' => $err];
         }
     }
 

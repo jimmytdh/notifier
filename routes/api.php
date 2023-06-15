@@ -14,7 +14,10 @@ use Illuminate\Support\Facades\Route;
 |get_departments
 */
 
+
+Route::get('/get_firebase', [\App\Http\Controllers\ReferralController::class, 'getFirebase']);
 Route::post('/insert_referral', [\App\Http\Controllers\ReferralController::class, 'insert_referral']);
+Route::post('/insert_referral_5pm', [\App\Http\Controllers\ReferralController::class, 'insert_referral_5pm']);
 Route::post('/login', [\App\Http\Controllers\ReferralController::class, 'login']);
 Route::post('/forward_referral', [\App\Http\Controllers\ReferralController::class, 'forward_referral']);
 Route::post('/tag_as_done', [\App\Http\Controllers\ReferralController::class, 'tag_as_done']);
