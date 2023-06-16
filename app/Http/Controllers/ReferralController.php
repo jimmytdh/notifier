@@ -12,7 +12,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Kreait\Firebase\Factory;
 
 class ReferralController extends Controller
 {
@@ -70,13 +69,13 @@ class ReferralController extends Controller
                 $referral->userid = 99999;
                 $referral->firebase_key = $request->firebase_key;
                 $referral->patient = $request->patient;
-                $referral->gender = $request->gender;
+                $referral->gender = $request->sex;
                 $referral->age = $request->age;
                 $referral->diagnosis = $request->diagnosis;
-                $referral->chief_complaint = $request->chief_complaint;
+                $referral->chief_complaint = $request->chiefComplaint;
                 $referral->department = $request->department;
                 $referral->referring_hospital = $request->referring_hospital;
-                $referral->date_created = Carbon::now();
+                $referral->date_created = $request->date_referred;
                 $referral->save();
 
                 $logs = new Log;
