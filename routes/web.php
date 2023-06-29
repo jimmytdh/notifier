@@ -24,6 +24,11 @@ Route::get('/logout', function () {
     return redirect()->route('login');
 })->name('logout');
 
+Route::get('/download',function(){
+    $url = url('../notifier/apk/notifier_apk.apk');
+    return redirect()->to($url);
+});
+
 Route::post('/authenticate', [\App\Http\Controllers\UserController::class, 'authenticate'])->name('authenticate');
 
 Route::group(['middleware' => 'auth'], function () {
