@@ -76,7 +76,7 @@
                                     <td>` + data.patient + `</td>
                                     <td>` + data.age + `</td>
                                     <td>` + data.sex + `</td>
-                                    <td style="max-width: 100px;text-overflow:ellipsis;white-space: nowrap;overflow: hidden">` + data.chiefComplaint + `</td>
+                                    <td class="d-none" style="max-width: 100px;text-overflow:ellipsis;white-space: nowrap;overflow: hidden">` + data.chiefComplaint + `</td>
                                     <td>` + data.department + `</td>
                                     <td>` + moment(data.date_referred).format("MM/DD/YYYY hh:mm:ss A") + `</td>
                                     <td>
