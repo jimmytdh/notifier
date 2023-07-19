@@ -39,5 +39,4 @@
 @stop
 @section('js')
     @include('js.department')
-
 @stop

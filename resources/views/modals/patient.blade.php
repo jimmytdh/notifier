@@ -31,19 +31,23 @@
                                     <h6 class="card-title pb-0">Chief Complaint</h6>
                                     <h4 id="chief_complaint" style="font-size: 15px"></h4>
                                 </div>
-                                <div>
+                                <div class="track-div">
                                     <h6 class="card-title pb-0">Remarks</h6>
                                     <textarea class="form-control" style="height: 100px" id="common_remarks"></textarea>
                                 </div>
-                                <div class="mt-3">
+                                <div class="mt-3 track-div">
                                     <h6 class="card-title">Department</h6>
                                     <select class="form-control" id="department">
                                         <option value="">Select department</option>
-                                        <option>GENERAL SURGERY</option>
-                                        <option>INTERNAL MEDICINE</option>
+                                        <option value="GS">GENERAL SURGERY</option>
+                                        <option value="IM">INTERNAL MEDICINE</option>
+                                        <option value="ER">EMERGENCY ROOM</option>
+                                        <option value="SURGERY">SURGERY</option>
+                                        <option value="OB">OB GYNE</option>
+                                        <option value="PEDIA">PEDIATRICS</option>
                                     </select>
                                 </div>
-                                <div class="text-end mt-4">
+                                <div class="text-end mt-4 track-div">
                                     <button class="btn btn-primary ms-1 me-1" id="btn_done">TAG AS
                                         DONE
                                     </button>
@@ -53,7 +57,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="ps-2 pe-2" style="background: rgb(246,249,255)">
+                    <div class="ps-2 pe-2" style="background: rgb(246,249,255)" id="activity_container">
                         <div class="card">
                             <div class="card-body">
                                 <h5 class="card-title">Activity Logs</h5>

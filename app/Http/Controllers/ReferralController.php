@@ -97,11 +97,11 @@ class ReferralController extends Controller
     public function insert_referral(Request $request)
     {
         try {
-            #Insert new referrals triggered by  mobile app (Notifier)
             $referral = Referral::where('firebase_key', $request->firebase_key)->get()->first();
             if ($referral) {
                 return ['code' => 500, 'message' => 'Referral already added'];
             }
+
             $referral = new Referral;
             $referral->userid = $request->userid;
             $referral->firebase_key = $request->firebase_key;
@@ -131,8 +131,7 @@ class ReferralController extends Controller
             $logs->destination = $request->department;
             $logs->remarks = $request->remarks;
             $logs->save();
-
-            return ['code' => 200, 'message' => 'New referral added'];
+            return ['code' => 200, 'message' => "Referral successfully forwarded"];
         } catch (\Exception $err) {
             $this->insert_error($request->userid, $err);
             return ['code' => 500, 'message' => $err];
@@ -182,7 +181,11 @@ class ReferralController extends Controller
                 return ['code' => 401, 'message' => 'Referral not found'];
             }
 
-            $logs = Log::where('referral_id', $referral->id)->get()->first();
+            if ($referral->status == "DONE") {
+                return ['code' => 401, 'message' => 'Referrals already tagged as DONE'];
+            }
+
+            $logs = Log::where('referral_id', $referral->id)->get()->last();
             if (!$logs) {
                 return ['code' => 401, 'message' => 'Referral not found'];
             }
@@ -294,10 +297,36 @@ class ReferralController extends Controller
             $logs->destination = $request->department;
             $logs->remarks = $request->remarks;
             $logs->save();
-            self::insertError('New referral added sheeesh');
-            return response(['code' => 200, 'message' => 'New referral added ' . $referral->id]);
-        } catch (\Exception $exception) {
 
+            #CURL PUSH NOTIFICATION
+            $to = "/topics/referrals_" . $request->topic;
+            $data = array('age' => $request->age, 'patient' => $request->patient, 'hospital_referrer' => $request->referring_hospital, 'sex' => $request->gender);
+            $post_fields = array('to' => $to, 'data' => $data);
+            $curl = curl_init();
+            #UNCOMMENT THIS WHEN IN PRODUCTION
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+            ####################################
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://fcm.googleapis.com/fcm/send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => json_encode($post_fields),
+                CURLOPT_HTTPHEADER => array(
+                    'Content-Type: application/json',
+                    'Authorization: key=AAAAU6ekIBA:APA91bEtfmASYObVAvEasSdtyaBqz6e0yi9gJrZ0J9fSxdYpDCdf6JWeN-Kbs7O-sEwEGoGxIn6cIw52RLi-Z2iRH2XfmHf2KH3xDdPWV4Of5C_GxJlq1rstQoNVCFzs_K_W3INFD0ks'
+                ),
+            ));
+
+            curl_exec($curl);
+            curl_close($curl);
+            return response(['code' => 200, 'message' => "Referral successfully forwarded"]);
+        } catch (\Exception $exception) {
             return response(['code' => 500, 'message' => $exception->getMessage()]);
         }
     }
@@ -324,12 +353,40 @@ class ReferralController extends Controller
             $logs->referral_id = $referral->id;
             $logs->forwarded_by = Auth::id();
             $logs->origin = session('access_rights');
-            $logs->destination = $request->destination;
+            $logs->destination = $request->department;
             $logs->remarks = $request->remarks;
             $logs->save();
 
-            $referral->department = $request->destination;
+            $referral->department = $request->department;
             $referral->save();
+
+            #CURL PUSH NOTIFICATION
+            $to = "/topics/referrals_" . $request->topic;
+            $data = array('age' => $request->age, 'patient' => $request->patient, 'hospital_referrer' => $request->referring_hospital, 'sex' => $request->gender);
+            $post_fields = array('to' => $to, 'data' => $data);
+            $curl = curl_init();
+            #UNCOMMENT THIS WHEN IN PRODUCTION
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+            ####################################
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://fcm.googleapis.com/fcm/send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => json_encode($post_fields),
+                CURLOPT_HTTPHEADER => array(
+                    'Content-Type: application/json',
+                    'Authorization: key=AAAAU6ekIBA:APA91bEtfmASYObVAvEasSdtyaBqz6e0yi9gJrZ0J9fSxdYpDCdf6JWeN-Kbs7O-sEwEGoGxIn6cIw52RLi-Z2iRH2XfmHf2KH3xDdPWV4Of5C_GxJlq1rstQoNVCFzs_K_W3INFD0ks'
+                ),
+            ));
+
+            curl_exec($curl);
+            curl_close($curl);
             return response(['code' => 200, 'message' => 'Referral forwarded successfully']);
         } catch (\Exception $err) {
             self::insert_error(Auth::id(), $err->getMessage());
@@ -342,12 +399,16 @@ class ReferralController extends Controller
         try {
             $referral = Referral::find($request->id);
             if (!$referral) {
-                return ['code' => 401, 'message' => 'Referral not found'];
+                return ['code' => 500, 'message' => 'Referral not found'];
             }
 
-            $logs = Log::where('referral_id', $referral->id)->get()->first();
+            if ($referral->status == "DONE") {
+                return ['code' => 500, 'message' => 'Referrals already tagged as DONE'];
+            }
+
+            $logs = Log::where('referral_id', $referral->id)->get()->last();
             if (!$logs) {
-                return ['code' => 401, 'message' => 'Referral not found'];
+                return ['code' => 500, 'message' => 'Referral not found'];
             }
 
             $logs->tagged_by = Auth::id();
@@ -367,9 +428,17 @@ class ReferralController extends Controller
     public function getReferrals(Request $request)
     {
         try {
+            $patient = $request->search_patient;
             $referrals = Referral::
             where('department', session('access_rights'))
-                ->whereNull('status')
+                ->where(function ($query) use ($patient) {
+                    $query->whereNull('status');
+                    if ($patient != "") {
+                        $query->where("patient", "LIKE", "%" . $patient . "%");
+                    }
+                })
+                ->skip($request->page * 10)
+                ->take(11)
                 ->get();
             return response(['code' => 200, 'results' => $referrals]);
         } catch (\Exception $exception) {
@@ -380,7 +449,17 @@ class ReferralController extends Controller
     public function getAllReferrals(Request $request)
     {
         try {
-            $referrals = Referral::get();
+            $patient = $request->search_patient;
+            $referrals = Referral::
+            where('department', session('access_rights'))
+                ->where(function ($query) use ($patient) {
+                    if ($patient != "") {
+                        $query->where("patient", "LIKE", "%" . $patient . "%");
+                    }
+                })
+                ->skip($request->page * 10)
+                ->take(11)
+                ->get();
             return response(['code' => 200, 'results' => $referrals]);
         } catch (\Exception $exception) {
             return response(['code' => 500, 'message' => $exception->getMessage()]);
@@ -395,6 +474,7 @@ class ReferralController extends Controller
         }
 
         $columns = ['origin', 'destination', 'remarks', 'date_tagged', 'date_forwarded'];
-        return ['code' => 200, 'results' => Log::where('referral_id', '=', $referral->id)->get($columns)];
+        $logs = Log::where('referral_id', '=', $referral->id)->get($columns);
+        return response(['code' => 200, 'results' => $logs]);
     }
 }

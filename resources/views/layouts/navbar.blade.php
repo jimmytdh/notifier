@@ -30,6 +30,16 @@
                     <li class="dropdown-header">
                         <h6>{{ \Illuminate\Support\Facades\Auth::user()->fname.' '.\Illuminate\Support\Facades\Auth::user()->lname  }}</h6>
                         <span class="d-none" id="user_role">{{ session('access_rights') }}</span>
+                        <span class="d-none" id="user_code">{{ session('code') }}</span>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center" href="#" id="change_password">
+                            <i class="bi bi-gear"></i>
+                            <span>Change password</span>
+                        </a>
                     </li>
                     <li>
                         <hr class="dropdown-divider">

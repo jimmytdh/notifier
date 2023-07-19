@@ -39,7 +39,15 @@
             });
     }
 
+    function get(child, callback) {
+        firebase.database().ref(child).once("value", (data) => {
+            callback(data);
+        });
+    }
+
     function deleteChild(child) {
         firebase.database().ref(child).remove();
     }
+
+
 </script>

@@ -4,9 +4,6 @@
         <div>
             <input class="form-control" placeholder="Search patient" id="search_patient"/>
         </div>
-        <div class="ms-2 me-1">
-            <input type="text" class="form-control" placeholder="Search department" id="search_department"/>
-        </div>
         <div class="ms-1">
             <button class="btn btn-success" id="btn_search">
                 <i class="bi bi-search"></i>
@@ -15,7 +12,7 @@
     </div>
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">All Referrals</h5>
+            <h5 class="card-title">Referrals</h5>
             <div class="table-responsive">
                 <table class="table text-center">
                     <thead>
@@ -24,7 +21,6 @@
                         <th>Patient</th>
                         <th>Age</th>
                         <th>Gender</th>
-                        <th>Chief Complaint</th>
                         <th>Department</th>
                         <th>Date Referred</th>
                         <th style="width: 4%"></th>
@@ -34,10 +30,20 @@
                 </table>
             </div>
         </div>
+        <div class="card-footer text-dark" id="pagination_container">
+            <div class="d-flex align-items-center justify-content-center">
+                <button class="btn btn-sm d-none" style="background: transparent !important;" id="btn_prev">
+                    <i class="bi bi-caret-left"></i>
+                </button>
+                <div id="page_items_count"></div>
+                <button class="btn btn-sm" style="background: transparent !important;" id="btn_next">
+                    <i class="bi bi-caret-right"></i>
+                </button>
+            </div>
+        </div>
     </div>
     @include('modals.patient')
 @stop
 @section('js')
     @include('js.referrals')
-
 @stop

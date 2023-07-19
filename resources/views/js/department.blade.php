@@ -20,6 +20,8 @@
             }
         });
 
+
+
         $("#btn_search").click(function () {
             const department = $("#search_department").val().trim().toUpperCase();
         });

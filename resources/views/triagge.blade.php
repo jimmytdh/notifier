@@ -24,7 +24,6 @@
                         <th>Patient</th>
                         <th>Age</th>
                         <th>Gender</th>
-                        <th>Chief Complaint</th>
                         <th>Department</th>
                         <th>Date Referred</th>
                         <th style="width: 4%"></th>
@@ -38,6 +37,5 @@
     @include('modals.patient')
 @stop
 @section('js')
-    @include('js.opcen')
-
+    @include('js.triagge')
 @stop

@@ -14,8 +14,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    if (Auth::check()) return redirect()->route('opcen');
-    return view('login');
+    if (!Auth::check()) return view('login');
+
+    if (session('code') == "TRIAGGE")
+        return redirect()->route('triagge');
+
+    return redirect()->route('referrals');
+
 })->name('login');
 
 Route::get('/logout', function () {
@@ -24,7 +29,7 @@ Route::get('/logout', function () {
     return redirect()->route('login');
 })->name('logout');
 
-Route::get('/download',function(){
+Route::get('/download', function () {
     $url = url('../notifier/apk/notifier_apk.apk');
     return redirect()->to($url);
 });
@@ -32,25 +37,26 @@ Route::get('/download',function(){
 Route::post('/authenticate', [\App\Http\Controllers\UserController::class, 'authenticate'])->name('authenticate');
 
 Route::group(['middleware' => 'auth'], function () {
-    Route::get('/opcen', function () {
-        return view('opcen');
-    })->name('opcen');
+    Route::get('/triagge', function () {
+        if(session('code') != 'TRIAGGE') return redirect('/');
+        return view('triagge');
+    })->name('triagge');
 
-    Route::get('/department', function () {
-        return view('department');
-    })->name('department');
+    Route::get('/track_referrals', function () {
+        return view('track_referrals');
+    })->name('track_referrals');
 
     Route::get('/referrals', function () {
+        if(session('code') == 'TRIAGGE') return redirect()->route('/');
         return view('referrals');
     })->name('referrals');
 
-    Route::get('get_referrals',[\App\Http\Controllers\ReferralController::class,'getReferrals'])->name('getReferrals');
-    Route::get('get_all_referrals',[\App\Http\Controllers\ReferralController::class,'getAllReferrals'])->name('getAllReferrals');
-    Route::get('load_logs',[\App\Http\Controllers\ReferralController::class,'loadLogs'])->name('loadLogs');
+    Route::get('/get_referrals', [\App\Http\Controllers\ReferralController::class, 'getReferrals'])->name('getReferrals');
+    Route::get('/get_all_referrals', [\App\Http\Controllers\ReferralController::class, 'getAllReferrals'])->name('getAllReferrals');
+    Route::get('/load_logs', [\App\Http\Controllers\ReferralController::class, 'loadLogs'])->name('loadLogs');
 
-    Route::post('insert_referral',[\App\Http\Controllers\ReferralController::class,'insertReferral'])->name('insertReferral');
-    Route::post('forward_referral',[\App\Http\Controllers\ReferralController::class,'forwardReferral'])->name('forwardReferral');
-    Route::post('tag_as_done',[\App\Http\Controllers\ReferralController::class,'tagAsDone'])->name('tagAsDone');
-
-
+    Route::post('/insert_referral', [\App\Http\Controllers\ReferralController::class, 'insertReferral'])->name('insertReferral');
+    Route::post('/forward_referral', [\App\Http\Controllers\ReferralController::class, 'forwardReferral'])->name('forwardReferral');
+    Route::post('/tag_as_done', [\App\Http\Controllers\ReferralController::class, 'tagAsDone'])->name('tagAsDone');
+    Route::post('/password/update', [\App\Http\Controllers\UserController::class, 'changePassword'])->name('changePassword');
 });
