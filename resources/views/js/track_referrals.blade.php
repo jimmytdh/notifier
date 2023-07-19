@@ -60,7 +60,7 @@
                 $("#page_items_count").text(((page * 10) + 1) + " - " + ((page * 10) + max_visible));
                 for (let i = 0; i < max_visible; i++) {
                     const it = data.results[i];
-                    const tr = `<tr id="referral_id_` + data.id + `">
+                    const tr = `<tr id="referral_id_` + it.id + `">
                                     <td>` + it.referring_hospital + `</td>
                                     <td>` + it.patient + `</td>
                                     <td>` + it.age + `</td>
