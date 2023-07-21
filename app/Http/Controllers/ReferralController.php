@@ -406,13 +406,13 @@ class ReferralController extends Controller
                 return ['code' => 500, 'message' => 'Referrals already tagged as DONE'];
             }
 
-            $logs = Log::where('referral_id', $referral->id)->get()->last();
-            if (!$logs) {
-                return ['code' => 500, 'message' => 'Referral not found'];
-            }
-
-            $logs->tagged_by = Auth::id();
+            $logs = new Log;
+            $logs->referral_id = $request->id;
+            $logs->forwarded_by = Auth::id();
+            $logs->origin = $referral->department;
+            $logs->destination = 'CYCLE END';
             $logs->remarks = $request->remarks;
+            $logs->date_forwarded = Carbon::now();
             $logs->save();
 
             $referral->status = "DONE";

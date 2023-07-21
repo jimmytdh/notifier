@@ -6,7 +6,7 @@
     let page = 0;
     const patient_modal = new bootstrap.Modal(document.getElementById('patient_modal'));
     $(document).ready(function () {
-
+        console.log($("#user_code").text().trim());
         observe($("#user_code").text().trim(), function (snapshot) {
             console.log(snapshot.val());
             if (!is_init) return;
@@ -127,9 +127,10 @@
                     $("#common_remarks").val("");
                     $("#department").val("");
                     toastr.success(data.message, "Information");
-                    insert(params.department, {id: 1}, function (message) {
+                    insert(params.topic, params.patient, function (message) {
                         deleteChild(params.department);
                     });
+                    getReferrals();
                 }).catch(err => {
                 toastr.error(err, "Ooops");
             });
