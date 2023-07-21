@@ -412,7 +412,7 @@ class ReferralController extends Controller
             }
 
             $logs->tagged_by = Auth::id();
-            $logs->remarks = "DONE";
+            $logs->remarks = $request->remarks;
             $logs->save();
 
             $referral->status = "DONE";

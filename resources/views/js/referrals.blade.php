@@ -43,7 +43,10 @@
         });
 
         $("#btn_done").click(function () {
-            const remarks = $("#")
+            let remarks = $("#common_remarks").val().trim();
+            if(remarks == "")
+                remarks = "TAGGED AS DONE";
+
             if (confirm("Are you sure you want to tag this as done?")) {
                 $(this).prop("disabled", true);
                 $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
@@ -53,7 +56,7 @@
                         "Content-Type": "application/json",
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
-                    body: JSON.stringify({id: referral_id})
+                    body: JSON.stringify({id: referral_id, remarks: remarks})
                 })
                     .then(res => res.json())
                     .then(data => {

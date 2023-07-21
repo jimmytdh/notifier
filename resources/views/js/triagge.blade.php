@@ -6,6 +6,7 @@
     let page = 0;
     const patient_modal = new bootstrap.Modal(document.getElementById('patient_modal'));
     $(document).ready(function () {
+        $("#btn_done").addClass("d-none");
         $("#activity_container").addClass("d-none");
         $("#referral_list").append(`<tr>
                                             <td colspan="8">
@@ -61,64 +62,6 @@
                 $("#referral_list").append(tr);
             }
         });
-
-        observe("23", function (snapshot) {
-            if (!is_init || !snapshot.val()) return;
-
-            const item = snapshot.val();
-            item.key = snapshot.key;
-            current_list.push(item);
-
-            if (!is_searching) {
-                const data = snapshot.val();
-                const tr = `<tr>
-                                    <td>` + data.referring_hospital + `</td>
-                                    <td>` + data.patient + `</td>
-                                    <td>` + data.age + `</td>
-                                    <td>` + data.sex + `</td>
-                                    <td class="d-none" style="max-width: 100px;text-overflow:ellipsis;white-space: nowrap;overflow: hidden">` + data.chiefComplaint + `</td>
-                                    <td>` + data.department + `</td>
-                                    <td>` + moment(data.date_referred).format("MM/DD/YYYY hh:mm:ss A") + `</td>
-                                    <td>
-                                        <button class='btn btn-sm' style="background: transparent" onclick='viewPatient("` + item.key + `")'>
-                                            <i class="bi bi-eye-fill text-success"></i>
-                                        </button>
-                                    </td>
-                                </tr>`;
-                $("#referral_list").append(tr);
-            }
-
-            toastr.success(snapshot.val().patient, "New referral");
-            var msg = new SpeechSynthesisUtterance();
-            msg.text = "New referral";
-            window.speechSynthesis.speak(msg);
-        });
-
-        get("23", function (snapshots) {
-            $("#referral_list").empty();
-            snapshots.forEach(snapshot => {
-                const it = snapshot.val();
-                it.key = snapshot.key;
-                current_list.push(it);
-                const tr = `<tr>
-                                    <td>` + it.referring_hospital + `</td>
-                                    <td>` + it.patient + `</td>
-                                    <td>` + it.age + `</td>
-                                    <td>` + it.sex + `</td>
-                                    <td class="d-none" style="max-width: 100px;text-overflow:ellipsis;white-space: nowrap;overflow: hidden">` + it.chiefComplaint + `</td>
-                                    <td>` + it.department + `</td>
-                                    <td>` + moment(it.date_referred).format("MM/DD/YYYY hh:mm:ss A") + `</td>
-                                    <td>
-                                        <button class='btn btn-sm' style="background: transparent" onclick='viewPatient("` + it.key + `")'>
-                                            <i class="bi bi-eye-fill text-success"></i>
-                                        </button>
-                                    </td>
-                                </tr>`;
-                $("#referral_list").append(tr);
-            });
-
-            is_init = true;
-        })
 
         $("#btn_send").click(function () {
             $(".is-invalid").removeClass("is-invalid");
@@ -183,6 +126,65 @@
                 toastr.error(err, "Ooops");
             });
         });
+
+        observe("23", function (snapshot) {
+            if (!is_init || !snapshot.val()) return;
+
+            const item = snapshot.val();
+            item.key = snapshot.key;
+            current_list.push(item);
+
+            if (!is_searching) {
+                const data = snapshot.val();
+                const tr = `<tr>
+                                    <td>` + data.referring_hospital + `</td>
+                                    <td>` + data.patient + `</td>
+                                    <td>` + data.age + `</td>
+                                    <td>` + data.sex + `</td>
+                                    <td class="d-none" style="max-width: 100px;text-overflow:ellipsis;white-space: nowrap;overflow: hidden">` + data.chiefComplaint + `</td>
+                                    <td>` + data.department + `</td>
+                                    <td>` + moment(data.date_referred).format("MM/DD/YYYY hh:mm:ss A") + `</td>
+                                    <td>
+                                        <button class='btn btn-sm' style="background: transparent" onclick='viewPatient("` + item.key + `")'>
+                                            <i class="bi bi-eye-fill text-success"></i>
+                                        </button>
+                                    </td>
+                                </tr>`;
+                $("#referral_list").append(tr);
+            }
+
+            toastr.success(snapshot.val().patient, "New referral");
+            var msg = new SpeechSynthesisUtterance();
+            msg.text = "New referral";
+            window.speechSynthesis.speak(msg);
+        });
+
+        get("23", function (snapshots) {
+            $("#referral_list").empty();
+            snapshots.forEach(snapshot => {
+                const it = snapshot.val();
+                it.key = snapshot.key;
+                current_list.push(it);
+                const tr = `<tr>
+                                    <td>` + it.referring_hospital + `</td>
+                                    <td>` + it.patient + `</td>
+                                    <td>` + it.age + `</td>
+                                    <td>` + it.sex + `</td>
+                                    <td class="d-none" style="max-width: 100px;text-overflow:ellipsis;white-space: nowrap;overflow: hidden">` + it.chiefComplaint + `</td>
+                                    <td>` + it.department + `</td>
+                                    <td>` + moment(it.date_referred).format("MM/DD/YYYY hh:mm:ss A") + `</td>
+                                    <td>
+                                        <button class='btn btn-sm' style="background: transparent" onclick='viewPatient("` + it.key + `")'>
+                                            <i class="bi bi-eye-fill text-success"></i>
+                                        </button>
+                                    </td>
+                                </tr>`;
+                $("#referral_list").append(tr);
+            });
+
+            is_init = true;
+        })
+
     });
 
     function viewPatient(key) {
