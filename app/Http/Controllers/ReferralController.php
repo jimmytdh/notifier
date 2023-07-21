@@ -425,6 +425,53 @@ class ReferralController extends Controller
         }
     }
 
+    public function tagAsDoneTriagge(Request $request)
+    {
+        try {
+            $referral = Referral::where('firebase_key', $request->firebase_key)->first();
+            if ($referral) {
+                return response(['code' => 500, 'message' => 'Referral already added']);
+            }
+
+            $referral = new Referral;
+            $referral->userid = Auth::id();
+            $referral->firebase_key = $request->firebase_key;
+            $referral->patient = $request->patient;
+            $referral->gender = $request->gender;
+            $referral->age = $request->age;
+            $referral->diagnosis = $request->diagnosis;
+            $referral->chief_complaint = $request->chief_complaint;
+            $referral->department = $request->department;
+            $referral->referring_hospital = $request->referring_hospital;
+            $referral->date_created = Carbon::now();
+            $referral->status = "DONE";
+            $referral->save();
+
+            $logs = new Log;
+            $logs->referral_id = $referral->id;
+            $logs->forwarded_by = 0;
+            $logs->origin = $request->referring_hospital;
+            $logs->destination = 'TRIAGGE';
+            $logs->remarks = "";
+            $logs->date_forwarded = $request->date_created;
+            $logs->save();
+
+            $logs = new Log;
+            $logs->referral_id = $referral->id;
+            $logs->forwarded_by = Auth::id();
+            $logs->origin = "TRIAGGE";
+            $logs->destination = 'CYCLE END';
+            $logs->remarks = $request->remarks;
+            $logs->date_forwarded = Carbon::now();
+            $logs->save();
+
+            return ['code' => 200, 'message' => 'Tagged successfully'];
+        } catch (\Exception $err) {
+            self::insertError($err->getMessage());
+            return ['code' => 500, 'message' => $err->getMessage()];
+        }
+    }
+
     public function getReferrals(Request $request)
     {
         try {
@@ -450,9 +497,7 @@ class ReferralController extends Controller
     {
         try {
             $patient = $request->search_patient;
-            $referrals = Referral::
-            where('department', session('access_rights'))
-                ->where(function ($query) use ($patient) {
+            $referrals = Referral::where(function ($query) use ($patient) {
                     if ($patient != "") {
                         $query->where("patient", "LIKE", "%" . $patient . "%");
                     }

@@ -58,5 +58,6 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/insert_referral', [\App\Http\Controllers\ReferralController::class, 'insertReferral'])->name('insertReferral');
     Route::post('/forward_referral', [\App\Http\Controllers\ReferralController::class, 'forwardReferral'])->name('forwardReferral');
     Route::post('/tag_as_done', [\App\Http\Controllers\ReferralController::class, 'tagAsDone'])->name('tagAsDone');
+    Route::post('/tag_as_done_triagge', [\App\Http\Controllers\ReferralController::class, 'tagAsDoneTriagge'])->name('tagAsDoneTriagge');
     Route::post('/password/update', [\App\Http\Controllers\UserController::class, 'changePassword'])->name('changePassword');
 });

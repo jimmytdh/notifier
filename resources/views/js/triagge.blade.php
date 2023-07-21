@@ -6,7 +6,7 @@
     let page = 0;
     const patient_modal = new bootstrap.Modal(document.getElementById('patient_modal'));
     $(document).ready(function () {
-        $("#btn_done").addClass("d-none");
+
         $("#activity_container").addClass("d-none");
         $("#referral_list").append(`<tr>
                                             <td colspan="8">
@@ -63,6 +63,73 @@
             }
         });
 
+        $("#btn_done").click(function () {
+            if(!confirm("Are you sure you want to tagged this as DONE?")) return;
+
+            $(".is-invalid").removeClass("is-invalid");
+            const remarks = $("#common_remarks").val().trim();
+            if(remarks == ""){
+                alert("Please specify remarks");
+                return;
+            }
+            const topic = $("#department").val();
+
+            let department = $("#department option:selected").text();
+            if(topic == "")
+                department= "";
+
+            const params = {
+                firebase_key: referral_data.key,
+                patient: referral_data.patient,
+                gender: referral_data.sex,
+                age: referral_data.age,
+                diagnosis: referral_data.diagnosis,
+                chief_complaint: referral_data.chiefComplaint,
+                referring_hospital: referral_data.referring_hospital,
+                department: department,
+                topic: topic,
+                remarks: remarks,
+                date_created: referral_data.date_referred
+            }
+
+            $(this).prop("disabled", true);
+            $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
+            fetch('{{ route('tagAsDoneTriagge') }}', {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                body: JSON.stringify(params)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.code == 500) {
+                        toastr.error(data.message, "Ooops");
+                        return;
+                    }
+
+                    patient_modal.toggle();
+                    $("#common_remarks").val("");
+                    $("#department").val("");
+                    toastr.success(data.message, "Information");
+
+                    deleteChild("23/" + referral_data.key);
+                    const index = getPositionByKey(referral_data.key);
+                    if (index > -1) {
+                        current_list.splice(index, 1);
+                        console.log(current_list.length)
+                        $("#btn_search").click();
+                    }
+
+                }).catch(err => {
+                toastr.error(err, "Ooops");
+            }).finally(()=>{
+                $("#btn_done").prop("disabled", false);
+                $("#btn_done").html("TAG AS DONE");
+            });
+        });
+
         $("#btn_send").click(function () {
             $(".is-invalid").removeClass("is-invalid");
             const remarks = $("#common_remarks").val().trim();
@@ -109,12 +176,11 @@
                     $("#common_remarks").val("");
                     $("#department").val("");
                     toastr.success(data.message, "Information");
-                    insert(params.department, {id: 1}, function (message) {
-                        deleteChild(params.department);
+                    insert(params.topic, params.patient, function (message) {
+                        deleteChild(params.topic);
                     });
 
                     deleteChild("23/" + referral_data.key);
-                    console.log(current_list.length)
                     const index = getPositionByKey(referral_data.key);
                     if (index > -1) {
                         current_list.splice(index, 1);

@@ -8,6 +8,7 @@
     $(document).ready(function () {
 
         observe($("#user_code").text().trim(), function (snapshot) {
+            console.log(snapshot.val());
             if (!is_init) return;
             toastr.success(snapshot.val(), "New referral");
             var msg = new SpeechSynthesisUtterance();

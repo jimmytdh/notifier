@@ -60,6 +60,7 @@
                 $("#page_items_count").text(((page * 10) + 1) + " - " + ((page * 10) + max_visible));
                 for (let i = 0; i < max_visible; i++) {
                     const it = data.results[i];
+                    const department = (it.department) ? it.department : "";
                     const tr = `<tr id="referral_id_` + it.id + `">
                                     <td>` + it.referring_hospital + `</td>
                                     <td>` + it.patient + `</td>
@@ -67,7 +68,7 @@
                                     <td>` + it.gender + `</td>
                                     <td class="d-none" style="max-width: 100px;text-overflow:ellipsis;white-space: nowrap;overflow: hidden">` + it.chief_complaint + `</td>
                                     <td class="d-none">` + it.diagnosis + `</td>
-                                    <td>` + it.department + `</td>
+                                    <td>` + department + `</td>
                                     <td>` + moment(it.date_referred).format("MM/DD/YYYY hh:mm:ss A") + `</td>
                                     <td>
                                         <button class='btn btn-sm' style="background: transparent" onClick='viewPatient("` + it.id + `")'>
