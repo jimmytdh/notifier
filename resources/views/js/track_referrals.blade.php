@@ -45,7 +45,7 @@
                 $("#referral_list").empty();
                 $("#btn_next").addClass("d-none");
                 if (data.results.length < 1) {
-                    $("#prescription_list").append("<tr><td colspan='7'>No record found</td></tr>");
+                    $("#referral_list").append("<tr><td colspan='7'>No record found</td></tr>");
                     return;
                 }
 
