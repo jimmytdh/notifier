@@ -128,7 +128,7 @@
                     $("#department").val("");
                     toastr.success(data.message, "Information");
                     insert(params.topic, params.patient, function (message) {
-                        deleteChild(params.department);
+                        deleteChild(params.topic);
                     });
                     getReferrals();
                 }).catch(err => {
