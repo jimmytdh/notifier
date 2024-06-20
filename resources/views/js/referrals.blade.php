@@ -6,9 +6,7 @@
     let page = 0;
     const patient_modal = new bootstrap.Modal(document.getElementById('patient_modal'));
     $(document).ready(function () {
-        console.log($("#user_code").text().trim());
         observe($("#user_code").text().trim(), function (snapshot) {
-            console.log(snapshot.val());
             if (!is_init) return;
             toastr.success(snapshot.val(), "New referral");
             var msg = new SpeechSynthesisUtterance();

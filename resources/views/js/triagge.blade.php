@@ -35,11 +35,7 @@
 
             $("#referral_list").empty();
             if (searched_data.length < 1) {
-                $("#referral_list").append(`<tr>
-                                            <td colspan="8">
-                                                <div class="text-center">No record found</div>
-                                            </td>
-                                        </tr>`);
+                $("#referral_list").append("<tr><td colspan='8'><div class='text-center'>No record found</div></td></tr>");
                 return;
             }
 
@@ -64,19 +60,19 @@
         });
 
         $("#btn_done").click(function () {
-            if(!confirm("Are you sure you want to tagged this as DONE?")) return;
+            if (!confirm("Are you sure you want to tagged this as DONE?")) return;
 
             $(".is-invalid").removeClass("is-invalid");
             const remarks = $("#common_remarks").val().trim();
-            if(remarks == ""){
+            if (remarks == "") {
                 alert("Please specify remarks");
                 return;
             }
             const topic = $("#department").val();
 
             let department = $("#department option:selected").text();
-            if(topic == "")
-                department= "";
+            if (topic == "")
+                department = "";
 
             const params = {
                 firebase_key: referral_data.key,
@@ -124,7 +120,7 @@
 
                 }).catch(err => {
                 toastr.error(err, "Ooops");
-            }).finally(()=>{
+            }).finally(() => {
                 $("#btn_done").prop("disabled", false);
                 $("#btn_done").html("TAG AS DONE");
             });
@@ -226,7 +222,10 @@
         });
 
         get("23", function (snapshots) {
-            $("#referral_list").empty();
+            $("#referral_list").append("<tr><td colspan='8'><div class='text-center'>No record found</div></td></tr>");
+            if (snapshots.length > 0) {
+                $("#referral_list").empty();
+            }
             snapshots.forEach(snapshot => {
                 const it = snapshot.val();
                 it.key = snapshot.key;
