@@ -29,7 +29,7 @@
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                     <li class="dropdown-header">
                         <h6>{{ \Illuminate\Support\Facades\Auth::user()->fname.' '.\Illuminate\Support\Facades\Auth::user()->lname  }}</h6>
-                        <span class="d-none" id="user_role">{{ session('access_rights') }}</span>
+                        <span id="user_role">{{ session('access_rights') }}</span>
                         <span class="d-none" id="user_code">{{ session('code') }}</span>
                     </li>
                     <li>
