@@ -222,10 +222,13 @@
         });
 
         get("23", function (snapshots) {
-            $("#referral_list").append("<tr><td colspan='8'><div class='text-center'>No record found</div></td></tr>");
-            if (snapshots.length > 0) {
+            $("#referral_list").empty();
+            if (snapshots.length < 1) {
+                $("#referral_list").append("<tr><td colspan='8'><div class='text-center'>No record found</div></td></tr>");
+            } else {
                 $("#referral_list").empty();
             }
+
             snapshots.forEach(snapshot => {
                 const it = snapshot.val();
                 it.key = snapshot.key;
