@@ -96,6 +96,7 @@
 <script src="js/jquery.min.js"></script>
 <script src="js/moment.min.js"></script>
 <script src="js/toastr.min.js"></script>
+<script src="https://code.responsivevoice.org/responsivevoice.js?key=kiFSuLiB"></script>
 <script>
     const settings_modal = new bootstrap.Modal(document.getElementById('settings_modal'));
 
