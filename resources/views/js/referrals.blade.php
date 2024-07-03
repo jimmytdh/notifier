@@ -8,13 +8,12 @@
     $(document).ready(function () {
         observe($("#user_code").text().trim(), function (snapshot) {
             if (!is_init) return;
-            toastr.success(snapshot.val(), "New referral");
-            var msg = new SpeechSynthesisUtterance();
-            msg.text = "New referral";
-            window.speechSynthesis.speak(msg);
+
+            toastr.success(snapshot.val(), "New incoming referral");
+            responsiveVoice.speak('New incoming referral');
 
             getReferrals();
-        })
+        });
 
         get($("#user_code").text().trim(), function () {
             is_init = true;
@@ -43,7 +42,7 @@
 
         $("#btn_done").click(function () {
             let remarks = $("#common_remarks").val().trim();
-            if(remarks == "")
+            if (remarks == "")
                 remarks = "TAGGED AS DONE";
 
             if (confirm("Are you sure you want to tag this as done?")) {
@@ -90,6 +89,11 @@
                 return;
             }
 
+            if (remarks == "") {
+                $("#common_remarks").addClass("is-invalid");
+                return;
+            }
+
             const params = {
                 id: referral_id,
                 patient: patient,
@@ -118,6 +122,7 @@
                     $("#btn_send").html("FORWARD TO");
                     if (data.code == 500) {
                         toastr.error(data.message, "Ooops");
+                        getReferrals();
                         return;
                     }
 
