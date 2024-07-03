@@ -14,12 +14,12 @@
                     <span>Referrals</span>
                 </a>
             </li>
+        @endif
             <li class="nav-item">
                 <a class="nav-link collapsed" href="{{ route('track_referrals') }}">
                     <i class="bi bi-grid"></i>
                     <span>Track Referrals</span>
                 </a>
             </li>
-        @endif
     </ul>
 </aside><!-- End Sidebar-->
