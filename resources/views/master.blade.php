@@ -98,8 +98,11 @@
 <script src="js/toastr.min.js"></script>
 <script src="https://code.responsivevoice.org/responsivevoice.js?key=kiFSuLiB"></script>
 <script>
+    const _DEPARTMENTS = ['PEDIA','IM','SURGERY','OB','ER','GS'];
+    toastr.options = {
+        "positionClass": "toast-bottom-right",
+    }
     const settings_modal = new bootstrap.Modal(document.getElementById('settings_modal'));
-
     $(document).ready(function () {
         $("#change_password").click(function (e) {
             e.preventDefault();
