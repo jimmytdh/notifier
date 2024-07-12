@@ -1,9 +1,10 @@
 <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
 <script>
-    const _DEPARTMENTS = ['PEDIA','IM','SURGERY','OB','ER','GS'];
-
     let notification_counter = 0;
+    let speaker = new SpeechSynthesisUtterance();
+    speaker.text = "New Request!";
+
     toastr.options = {
         "positionClass": "toast-bottom-right",
     }
@@ -20,15 +21,6 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-
-    if ($("#user_code").text().trim() == "ER") {
-        _DEPARTMENTS.forEach(department => {
-            observe(department, function (snapshot) {
-                toastr.success(snapshot.val(), "New incoming referral to " + department);
-                responsiveVoice.speak('New incoming referral');
-            });
-        });
-    }
 
     function insert(child, data, callback) {
         firebase.database().ref(child).push().set(data, function (err) {
@@ -56,7 +48,6 @@
     function deleteChild(child) {
         firebase.database().ref(child).remove();
     }
-
 
 
 </script>
