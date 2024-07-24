@@ -80,7 +80,7 @@ class MyScheduledTask extends Command
                     )),
                     CURLOPT_HTTPHEADER => array(
                         'Content-Type: application/json',
-                        'Authorization: key=YOUR_SERVER_KEY' // Replace with your actual Server Key
+                        'Authorization: key=AAAAU6ekIBA:APA91bEtfmASYObVAvEasSdtyaBqz6e0yi9gJrZ0J9fSxdYpDCdf6JWeN-Kbs7O-sEwEGoGxIn6cIw52RLi-Z2iRH2XfmHf2KH3xDdPWV4Of5C_GxJlq1rstQoNVCFzs_K_W3INFD0ks' // Replace with your actual Server Key
                     ),
                 ));
 
