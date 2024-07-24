@@ -503,6 +503,7 @@ class ReferralController extends Controller
                         $query->where("patient", "LIKE", "%" . $patient . "%");
                     }
                 })
+                ->orderBy('date_created','DESC')
                 ->skip($request->page * 10)
                 ->take(11)
                 ->get();
