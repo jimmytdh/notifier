@@ -178,7 +178,7 @@
                                     <td class="d-none" style="max-width: 100px;text-overflow:ellipsis;white-space: nowrap;overflow: hidden">` + it.chief_complaint + `</td>
                                     <td class="d-none">` + it.diagnosis + `</td>
                                     <td>` + it.department + `</td>
-                                    <td>` + moment(it.date_referred).format("MM/DD/YYYY hh:mm:ss A") + `</td>
+                                    <td>` + moment(it.date_created).format("MM/DD/YYYY hh:mm:ss A") + `</td>
                                     <td>
                                         <button class='btn btn-sm' style="background: transparent" onClick='viewPatient("` + it.id + `")'>
                                             <i class="bi bi-eye-fill text-success"></i>
