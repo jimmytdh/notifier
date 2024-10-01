@@ -9,12 +9,23 @@ use App\Models\Referral;
 use App\Models\User;
 use App\Models\UserPrivilege;
 use Carbon\Carbon;
+use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 
 class ReferralController extends Controller
 {
+
+    protected $jwt_token, $bearer_token;
+
+    public function __construct()
+    {
+        $this->jwt_token = "";
+    }
+
     public function login(Request $request)
     {
         try {
@@ -484,7 +495,7 @@ class ReferralController extends Controller
                         $query->where("patient", "LIKE", "%" . $patient . "%");
                     }
                 })
-                ->orderBy('date_created','DESC')
+                ->orderBy('date_created', 'DESC')
                 ->skip($request->page * 10)
                 ->take(11)
                 ->get();
@@ -499,11 +510,11 @@ class ReferralController extends Controller
         try {
             $patient = $request->search_patient;
             $referrals = Referral::where(function ($query) use ($patient) {
-                    if ($patient != "") {
-                        $query->where("patient", "LIKE", "%" . $patient . "%");
-                    }
-                })
-                ->orderBy('date_created','DESC')
+                if ($patient != "") {
+                    $query->where("patient", "LIKE", "%" . $patient . "%");
+                }
+            })
+                ->orderBy('date_created', 'DESC')
                 ->skip($request->page * 10)
                 ->take(11)
                 ->get();
@@ -523,5 +534,153 @@ class ReferralController extends Controller
         $columns = ['origin', 'destination', 'remarks', 'date_tagged', 'date_forwarded'];
         $logs = Log::where('referral_id', '=', $referral->id)->get($columns);
         return response(['code' => 200, 'results' => $logs]);
+    }
+
+
+    #These will create a jwt token to be used to create a bearer token
+    public static function createJwtToken()
+    {
+        $serviceAccountPath = public_path('assets/notifier-5e4e8-firebase-adminsdk-ihhu7-65600f7d74.json');
+
+        if (!File::exists($serviceAccountPath)) {
+            throw new \Exception('Service account file not found');
+        }
+
+        $serviceAccount = json_decode(File::get($serviceAccountPath), true);
+        $now = time();
+
+        // Create JWT payload
+        $payload = [
+            "iss" => $serviceAccount['client_email'], // Issuer (client email)
+            "scope" => "https://www.googleapis.com/auth/firebase.messaging", // Scope for Firebase Messaging
+            "aud" => "https://oauth2.googleapis.com/token", // Audience for Google OAuth
+            "iat" => $now, // Issued at time
+            "exp" => $now + 3600 // Expire in 1 hour
+        ];
+
+        // Sign the JWT with the private key from the service account
+        $privateKey = $serviceAccount['private_key'];
+        return JWT::encode($payload, $privateKey, 'RS256'); // RS256 algorithm
+    }
+
+    #Returns a bearer token to be used when sending push notification
+    public function generateBearerToken()
+    {
+        try {
+
+            if (Cache::has('firebase_bearer_token')) {
+                return Cache::get('firebase_bearer_token');
+            }
+
+            if (!$this->jwt_token) {
+                $this->jwt_token = $this->createJwtToken();
+            }
+
+            $curl = curl_init();
+
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://oauth2.googleapis.com/token',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => http_build_query([
+                    'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                    'assertion' => $this->jwt_token
+                ]),
+                CURLOPT_HTTPHEADER => array(
+                    'Content-Type: application/x-www-form-urlencoded'
+                ),
+                CURLOPT_SSL_VERIFYHOST => 0,  // Disable SSL host verification (only for development)
+                CURLOPT_SSL_VERIFYPEER => 0   // Disable SSL certificate verification (only for development)
+            ));
+
+            $response = curl_exec($curl);
+
+            if (curl_errno($curl)) {
+                throw new \Exception(curl_error($curl));  // Catch curl errors
+            }
+
+            curl_close($curl);
+
+            // Parse the response to extract the token and expiration time
+            $responseArray = json_decode($response, true);
+            if (isset($responseArray['access_token'])) {
+                $bearerToken = $responseArray['access_token'];
+                $expiresIn = $responseArray['expires_in'];  // Expiry time in seconds, usually 3600
+
+                // Cache the token with an expiration time slightly shorter than its actual expiration
+                Cache::put('firebase_bearer_token', $bearerToken, now()->addSeconds($expiresIn - 60));  // Subtract 1 minute for buffer
+
+                return $bearerToken;
+            } else {
+                throw new \Exception('Failed to retrieve access token.');
+            }
+        } catch (\Exception $exception) {
+            return response()->json($exception->getMessage(), 500);
+        }
+
+    }
+
+    public function sendPushNotification(Request $request)
+    {
+        $request->validate([
+            'topic' => 'required|string',
+            'hospital_referrer' => 'required|string',
+            'patient' => 'required|string',
+            'age' => 'required|integer',
+            'sex' => 'required|string'
+        ]);
+
+        $bearer_token = 'Authorization: Bearer ' . $this->generateBearerToken();
+
+        $payload = [
+            "message" => [
+                "topic" => $request->topic,
+                "data" => [
+                    "hospital_referrer" => $request->hospital_referrer,
+                    "patient" => $request->patient,
+                    "age" => $request->age,
+                    "sex" => $request->sex
+                ]
+            ]
+        ];
+        try {
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://fcm.googleapis.com/v1/projects/notifier-5e4e8/messages:send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => json_encode($payload),
+                CURLOPT_HTTPHEADER => array(
+                    $bearer_token,
+                    'Content-Type: application/json'
+                ),
+                CURLOPT_SSL_VERIFYHOST => 0,  // Disable SSL host verification
+                CURLOPT_SSL_VERIFYPEER => 0   // Disable SSL certificate verification
+            ));
+
+            $response = curl_exec($curl);
+
+            // Check if the request was successful
+            if ($response === false) {
+                $error = curl_error($curl);
+                curl_close($curl);
+                return response()->json(['error' => $error], 500); // Return the cURL error
+            }
+
+            curl_close($curl);
+            return response()->json($response);
+        } catch (\Exception $exception) {
+            return response()->json($exception->getMessage(), 500);
+        }
     }
 }
