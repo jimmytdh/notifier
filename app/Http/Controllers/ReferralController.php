@@ -636,7 +636,6 @@ class ReferralController extends Controller
         ]);
 
         $bearer_token = 'Authorization: Bearer ' . $this->generateBearerToken();
-
         $payload = [
             "message" => [
                 "topic" => $request->topic,
@@ -669,8 +668,6 @@ class ReferralController extends Controller
             ));
 
             $response = curl_exec($curl);
-
-            // Check if the request was successful
             if ($response === false) {
                 $error = curl_error($curl);
                 curl_close($curl);

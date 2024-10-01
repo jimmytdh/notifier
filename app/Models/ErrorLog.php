@@ -9,6 +9,7 @@ class ErrorLog extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql';
     protected $table = 'error_logs';
     protected $fillable = [
         'userid',
