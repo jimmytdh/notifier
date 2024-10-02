@@ -100,7 +100,7 @@ class ReferralController extends Controller
             }
             return ['code' => 200, 'message' => 'New referral added'];
         } catch (\Exception $err) {
-            $this->insert_error(99999, $err);
+            $this->insert_error(99999, $err->getMessage());
             return ['code' => 500, 'message' => $err];
         }
     }
@@ -144,7 +144,7 @@ class ReferralController extends Controller
             $logs->save();
             return ['code' => 200, 'message' => "Referral successfully forwarded"];
         } catch (\Exception $err) {
-            $this->insert_error($request->userid, $err);
+            $this->insert_error($request->userid, $err->getMessage());
             return ['code' => 500, 'message' => $err];
         }
     }
