@@ -178,11 +178,11 @@ class ReferralController extends Controller
             $referral->department = $request->destination;
             $referral->save();
 
-            $this->forwardPushNotification('referrals_' . $request->code, $referral->referring_hospital, $referral->patient, $referral->age, $referral->gender);
+            $this->forwardPushNotification('referrals_IM', $referral->referring_hospital, $referral->patient, $referral->age, $referral->gender);
             return response()->json(['code' => 200, 'message' => 'Referral forwarded successfully']);
         } catch (\Exception $err) {
-            $this->insert_error($request->forwarded_by, $err);
-            return response()->json(['code' => 500, 'message' => $err]);
+            $this->insert_error($request->forwarded_by, $err->getMessage());
+            return response()->json(['code' => 500, 'message' => $err->getMessage()]);
         }
     }
 
@@ -676,8 +676,6 @@ class ReferralController extends Controller
             ]
         ];
 
-        $this->insert_error(99999, $payload);
-
         try {
             $curl = curl_init();
             curl_setopt_array($curl, array(
@@ -689,7 +687,7 @@ class ReferralController extends Controller
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => $payload,
+                CURLOPT_POSTFIELDS => json_encode($payload),
                 CURLOPT_HTTPHEADER => array(
                     $bearer_token,
                     'Content-Type: application/json'
