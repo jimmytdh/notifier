@@ -142,6 +142,8 @@ class ReferralController extends Controller
             $logs->destination = $request->department;
             $logs->remarks = $request->remarks;
             $logs->save();
+
+            $this->forwardPushNotification('referrals_'.$request->code,$request->referring_hospital,$request->patient,$request->age,$request->gender);
             return ['code' => 200, 'message' => "Referral successfully forwarded"];
         } catch (\Exception $err) {
             $this->insert_error($request->userid, $err->getMessage());
@@ -663,22 +665,20 @@ class ReferralController extends Controller
 
     public function forwardPushNotification($topic, $hospital_referrer, $patient, $age, $sex)
     {
-        $bearer_token = 'Authorization: Bearer ' . $this->generateBearerToken();
-        $payload = [
-            "message" => [
-                "topic" => $topic,
-                "data" => [
-                    "hospital_referrer" => $hospital_referrer,
-                    "patient" => $patient,
-                    "age" => $age,
-                    "sex" => $sex
-                ]
-            ]
-        ];
-
-        $this->insert_error(9999, $topic);
-
         try {
+            $bearer_token = 'Authorization: Bearer ' . $this->generateBearerToken();
+            $payload = [
+                "message" => [
+                    "topic" => $topic,
+                    "data" => [
+                        "hospital_referrer" => $hospital_referrer,
+                        "patient" => $patient,
+                        "age" => $age,
+                        "sex" => $sex
+                    ]
+                ]
+            ];
+
             $curl = curl_init();
             curl_setopt_array($curl, array(
                 CURLOPT_URL => 'https://fcm.googleapis.com/v1/projects/notifier-5e4e8/messages:send',
@@ -700,7 +700,6 @@ class ReferralController extends Controller
 
             $response = curl_exec($curl);
             if ($response === false) {
-                $error = curl_error($curl);
                 curl_close($curl);
             }
 
