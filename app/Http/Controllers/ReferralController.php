@@ -178,7 +178,7 @@ class ReferralController extends Controller
             $referral->department = $request->destination;
             $referral->save();
 
-
+            $this->forwardPushNotification('referrals_' . $request->code, $referral->referring_hospital, $referral->patient, $referral->age, $referral->gender);
             return response()->json(['code' => 200, 'message' => 'Referral forwarded successfully']);
         } catch (\Exception $err) {
             $this->insert_error($request->forwarded_by, $err);
