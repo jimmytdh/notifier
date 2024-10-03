@@ -676,6 +676,8 @@ class ReferralController extends Controller
             ]
         ];
 
+        $this->insert_error(9999,$payload);
+
         try {
             $curl = curl_init();
             curl_setopt_array($curl, array(
