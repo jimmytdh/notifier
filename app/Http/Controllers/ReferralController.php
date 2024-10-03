@@ -152,8 +152,6 @@ class ReferralController extends Controller
     public function forward_referral(Request $request)
     {
         try {
-            $this->insert_error($request->forwarded_by, $request->firebase_key);
-
             $referral = Referral::where('firebase_key', $request->firebase_key)->get()->first();
             if (!$referral) {
                 return ['code' => 401, 'message' => 'Referral not found'];
@@ -168,6 +166,8 @@ class ReferralController extends Controller
                 $_logs->date_tagged = Carbon::now()->toDateTimeString();
                 $_logs->save();
             }
+
+            $this->insert_error($request->forwarded_by, $request->firebase_key);
 
             $logs = new Log;
             $logs->referral_id = $referral->id;
