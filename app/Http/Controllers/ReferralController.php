@@ -673,8 +673,8 @@ class ReferralController extends Controller
                     "data" => [
                         "hospital_referrer" => $hospital_referrer,
                         "patient" => $patient,
-                        "age" => $age,
-                        "sex" => $sex
+                        "age" => (string)$age,
+                        "sex" => (string)$sex
                     ]
                 ]
             ];
