@@ -152,6 +152,8 @@ class ReferralController extends Controller
     public function forward_referral(Request $request)
     {
         try {
+            $this->insert_error($request->forwarded_by, $request->firebase_key);
+
             $referral = Referral::where('firebase_key', $request->firebase_key)->get()->first();
             if (!$referral) {
                 return ['code' => 401, 'message' => 'Referral not found'];
@@ -177,10 +179,10 @@ class ReferralController extends Controller
 
             $referral->department = $request->destination;
             $referral->save();
-            return ['code' => 200, 'message' => 'Referral forwarded successfully'];
+            return response()->json(['code' => 200, 'message' => 'Referral forwarded successfully']);
         } catch (\Exception $err) {
             $this->insert_error($request->forwarded_by, $err);
-            return ['code' => 500, 'message' => $err];
+            return response()->json(['code' => 500, 'message' => $err]);
         }
     }
 
