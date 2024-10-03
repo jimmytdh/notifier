@@ -167,7 +167,7 @@ class ReferralController extends Controller
                 $_logs->save();
             }
 
-            $this->insert_error($request->forwarded_by, $request->firebase_key);
+            $this->insert_error($request->forwarded_by, $request->destination);
 
             $logs = new Log;
             $logs->referral_id = $referral->id;
@@ -177,7 +177,7 @@ class ReferralController extends Controller
             $logs->remarks = $request->remarks;
             $logs->save();
 
-            $referral->department = $request->destination;
+            $referral->department = "SAMPLE DEPARTMENT";
             $referral->save();
             return response()->json(['code' => 200, 'message' => 'Referral forwarded successfully']);
         } catch (\Exception $err) {
