@@ -110,7 +110,7 @@ class ReferralController extends Controller
         try {
             $referral = Referral::where('firebase_key', $request->firebase_key)->get()->first();
             if ($referral) {
-                return ['code' => 500, 'message' => 'Referral already added'];
+                return response()->json(['code' => 500, 'message' => 'Referral already added']);
             }
 
             $referral = new Referral;
