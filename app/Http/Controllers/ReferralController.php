@@ -653,7 +653,7 @@ class ReferralController extends Controller
             ]
         ];
 
-        $this->insert_error(99999,$payload);
+        $this->insert_error(99999, $payload);
         try {
             $curl = curl_init();
             curl_setopt_array($curl, array(
@@ -684,6 +684,7 @@ class ReferralController extends Controller
             curl_close($curl);
             return response()->json($response);
         } catch (\Exception $exception) {
+            $this->insert_error(99999, "PUSH NOTIF=>" . $exception->getMessage());
             return response()->json($exception->getMessage(), 500);
         }
     }
