@@ -700,7 +700,10 @@ class ReferralController extends Controller
 
             $response = curl_exec($curl);
             if ($response === false) {
-                curl_close($curl);
+                $error = curl_error($curl);
+                $this->insert_error(99999, "PUSH NOTIF=>Curl error: " . $error);
+            } else {
+                $this->insert_error(99999, "PUSH NOTIF=>Response: " . $response);
             }
 
             curl_close($curl);
