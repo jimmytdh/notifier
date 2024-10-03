@@ -676,6 +676,8 @@ class ReferralController extends Controller
             ]
         ];
 
+        $this->insert_error(9999, $topic);
+
         try {
             $curl = curl_init();
             curl_setopt_array($curl, array(
@@ -700,7 +702,6 @@ class ReferralController extends Controller
             if ($response === false) {
                 $error = curl_error($curl);
                 curl_close($curl);
-                return response()->json(['error' => $error], 500); // Return the cURL error
             }
 
             curl_close($curl);
