@@ -143,7 +143,7 @@ class ReferralController extends Controller
             $logs->remarks = $request->remarks;
             $logs->save();
 
-//            $this->forwardPushNotification('referrals_'.$request->code,$request->referring_hospital,$request->patient,$request->age,$request->gender);
+            $this->forwardPushNotification('referrals_'.$request->code,$request->referring_hospital,$request->patient,$request->age,$request->gender);
             return ['code' => 200, 'message' => "Referral successfully forwarded"];
         } catch (\Exception $err) {
             $this->insert_error($request->userid, $err->getMessage());
@@ -180,7 +180,7 @@ class ReferralController extends Controller
             $referral->department = $request->destination;
             $referral->save();
 
-            $this->forwardPushNotification('referrals_IM', $referral->referring_hospital, $referral->patient, $referral->age, $referral->gender);
+            $this->forwardPushNotification('referrals_'.$request->code, $referral->referring_hospital, $referral->patient, $referral->age, $referral->gender);
             return response()->json(['code' => 200, 'message' => 'Referral forwarded successfully']);
         } catch (\Exception $err) {
             $this->insert_error($request->forwarded_by, $err->getMessage());
