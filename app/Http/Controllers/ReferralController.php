@@ -676,7 +676,8 @@ class ReferralController extends Controller
             ]
         ];
 
-        $this->insert_error(99999,$payload);
+        $this->insert_error(99999, $payload);
+
         try {
             $curl = curl_init();
             curl_setopt_array($curl, array(
@@ -688,7 +689,7 @@ class ReferralController extends Controller
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => json_encode($payload),
+                CURLOPT_POSTFIELDS => $payload,
                 CURLOPT_HTTPHEADER => array(
                     $bearer_token,
                     'Content-Type: application/json'
