@@ -371,33 +371,35 @@ class ReferralController extends Controller
             $referral->department = $request->department;
             $referral->save();
 
-            #CURL PUSH NOTIFICATION
-            $to = "/topics/referrals_" . $request->topic;
-            $data = array('age' => $request->age, 'patient' => $request->patient, 'hospital_referrer' => $request->referring_hospital, 'sex' => $request->gender);
-            $post_fields = array('to' => $to, 'data' => $data);
-            $curl = curl_init();
-            #UNCOMMENT THIS WHEN IN PRODUCTION
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-            ####################################
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => 'https://fcm.googleapis.com/fcm/send',
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => '',
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => json_encode($post_fields),
-                CURLOPT_HTTPHEADER => array(
-                    'Content-Type: application/json',
-                    'Authorization: key=AAAAU6ekIBA:APA91bEtfmASYObVAvEasSdtyaBqz6e0yi9gJrZ0J9fSxdYpDCdf6JWeN-Kbs7O-sEwEGoGxIn6cIw52RLi-Z2iRH2XfmHf2KH3xDdPWV4Of5C_GxJlq1rstQoNVCFzs_K_W3INFD0ks'
-                ),
-            ));
+//            #CURL PUSH NOTIFICATION
+//            $to = "/topics/referrals_" . $request->topic;
+//            $data = array('age' => $request->age, 'patient' => $request->patient, 'hospital_referrer' => $request->referring_hospital, 'sex' => $request->gender);
+//            $post_fields = array('to' => $to, 'data' => $data);
+//            $curl = curl_init();
+//            #UNCOMMENT THIS WHEN IN PRODUCTION
+//            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+//            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+//            ####################################
+//            curl_setopt_array($curl, array(
+//                CURLOPT_URL => 'https://fcm.googleapis.com/fcm/send',
+//                CURLOPT_RETURNTRANSFER => true,
+//                CURLOPT_ENCODING => '',
+//                CURLOPT_MAXREDIRS => 10,
+//                CURLOPT_TIMEOUT => 0,
+//                CURLOPT_FOLLOWLOCATION => true,
+//                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+//                CURLOPT_CUSTOMREQUEST => 'POST',
+//                CURLOPT_POSTFIELDS => json_encode($post_fields),
+//                CURLOPT_HTTPHEADER => array(
+//                    'Content-Type: application/json',
+//                    'Authorization: key=AAAAU6ekIBA:APA91bEtfmASYObVAvEasSdtyaBqz6e0yi9gJrZ0J9fSxdYpDCdf6JWeN-Kbs7O-sEwEGoGxIn6cIw52RLi-Z2iRH2XfmHf2KH3xDdPWV4Of5C_GxJlq1rstQoNVCFzs_K_W3INFD0ks'
+//                ),
+//            ));
+//
+//            curl_exec($curl);
+//            curl_close($curl);
 
-            curl_exec($curl);
-            curl_close($curl);
+            $this->sendPushNotification($request);
             return response(['code' => 200, 'message' => 'Referral forwarded successfully']);
         } catch (\Exception $err) {
             self::insert_error(Auth::id(), $err->getMessage());
@@ -429,6 +431,7 @@ class ReferralController extends Controller
             $referral->status = "DONE";
             $referral->save();
 
+            #TODO: THIS ACTION TAG AS DONE
             return ['code' => 200, 'message' => 'Tagged successfully'];
         } catch (\Exception $err) {
             self::insertError($err->getMessage());
