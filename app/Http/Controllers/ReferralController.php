@@ -167,8 +167,6 @@ class ReferralController extends Controller
                 $_logs->save();
             }
 
-            $this->insert_error($request->forwarded_by, $request->destination);
-
             $logs = new Log;
             $logs->referral_id = $referral->id;
             $logs->forwarded_by = $request->forwarded_by;
@@ -177,8 +175,10 @@ class ReferralController extends Controller
             $logs->remarks = $request->remarks;
             $logs->save();
 
-            $referral->department = "SAMPLE DEPARTMENT";
+            $referral->department = $request->destination;
             $referral->save();
+
+
             return response()->json(['code' => 200, 'message' => 'Referral forwarded successfully']);
         } catch (\Exception $err) {
             $this->insert_error($request->forwarded_by, $err);
@@ -632,13 +632,13 @@ class ReferralController extends Controller
 
     public function sendPushNotification(Request $request)
     {
-        $request->validate([
-            'topic' => 'required|string',
-            'hospital_referrer' => 'required|string',
-            'patient' => 'required|string',
-            'age' => 'required|integer',
-            'sex' => 'required|string'
-        ]);
+//        $request->validate([
+//            'topic' => 'required|string',
+//            'hospital_referrer' => 'required|string',
+//            'patient' => 'required|string',
+//            'age' => 'required|integer',
+//            'sex' => 'required|string'
+//        ]);
 
         $bearer_token = 'Authorization: Bearer ' . $this->generateBearerToken();
         $payload = [
@@ -652,6 +652,8 @@ class ReferralController extends Controller
                 ]
             ]
         ];
+
+        $this->insert_error(99999,$payload);
         try {
             $curl = curl_init();
             curl_setopt_array($curl, array(
