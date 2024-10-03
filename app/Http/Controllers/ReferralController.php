@@ -373,35 +373,7 @@ class ReferralController extends Controller
             $referral->department = $request->department;
             $referral->save();
 
-//            #CURL PUSH NOTIFICATION
-//            $to = "/topics/referrals_" . $request->topic;
-//            $data = array('age' => $request->age, 'patient' => $request->patient, 'hospital_referrer' => $request->referring_hospital, 'sex' => $request->gender);
-//            $post_fields = array('to' => $to, 'data' => $data);
-//            $curl = curl_init();
-//            #UNCOMMENT THIS WHEN IN PRODUCTION
-//            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-//            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-//            ####################################
-//            curl_setopt_array($curl, array(
-//                CURLOPT_URL => 'https://fcm.googleapis.com/fcm/send',
-//                CURLOPT_RETURNTRANSFER => true,
-//                CURLOPT_ENCODING => '',
-//                CURLOPT_MAXREDIRS => 10,
-//                CURLOPT_TIMEOUT => 0,
-//                CURLOPT_FOLLOWLOCATION => true,
-//                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//                CURLOPT_CUSTOMREQUEST => 'POST',
-//                CURLOPT_POSTFIELDS => json_encode($post_fields),
-//                CURLOPT_HTTPHEADER => array(
-//                    'Content-Type: application/json',
-//                    'Authorization: key=AAAAU6ekIBA:APA91bEtfmASYObVAvEasSdtyaBqz6e0yi9gJrZ0J9fSxdYpDCdf6JWeN-Kbs7O-sEwEGoGxIn6cIw52RLi-Z2iRH2XfmHf2KH3xDdPWV4Of5C_GxJlq1rstQoNVCFzs_K_W3INFD0ks'
-//                ),
-//            ));
-//
-//            curl_exec($curl);
-//            curl_close($curl);
-
-//            $this->sendPushNotification($request);
+            $this->forwardPushNotification('referrals_' . $request->code, $referral->referring_hospital, $referral->patient, $referral->age, $referral->gender);
             return response(['code' => 200, 'message' => 'Referral forwarded successfully']);
         } catch (\Exception $err) {
             self::insert_error(Auth::id(), $err->getMessage());
@@ -632,13 +604,13 @@ class ReferralController extends Controller
 
     public function sendPushNotification(Request $request)
     {
-//        $request->validate([
-//            'topic' => 'required|string',
-//            'hospital_referrer' => 'required|string',
-//            'patient' => 'required|string',
-//            'age' => 'required|integer',
-//            'sex' => 'required|string'
-//        ]);
+        $request->validate([
+            'topic' => 'required|string',
+            'hospital_referrer' => 'required|string',
+            'patient' => 'required|string',
+            'age' => 'required|integer',
+            'sex' => 'required|string'
+        ]);
 
         $bearer_token = 'Authorization: Bearer ' . $this->generateBearerToken();
         $payload = [
@@ -653,7 +625,6 @@ class ReferralController extends Controller
             ]
         ];
 
-        $this->insert_error(99999, $payload);
         try {
             $curl = curl_init();
             curl_setopt_array($curl, array(
@@ -686,6 +657,55 @@ class ReferralController extends Controller
         } catch (\Exception $exception) {
             $this->insert_error(99999, "PUSH NOTIF=>" . $exception->getMessage());
             return response()->json($exception->getMessage(), 500);
+        }
+    }
+
+
+    public function forwardPushNotification($topic, $hospital_referrer, $patient, $age, $sex)
+    {
+        $bearer_token = 'Authorization: Bearer ' . $this->generateBearerToken();
+        $payload = [
+            "message" => [
+                "topic" => $topic,
+                "data" => [
+                    "hospital_referrer" => $hospital_referrer,
+                    "patient" => $patient,
+                    "age" => $age,
+                    "sex" => $sex
+                ]
+            ]
+        ];
+
+        try {
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://fcm.googleapis.com/v1/projects/notifier-5e4e8/messages:send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => json_encode($payload),
+                CURLOPT_HTTPHEADER => array(
+                    $bearer_token,
+                    'Content-Type: application/json'
+                ),
+                CURLOPT_SSL_VERIFYHOST => 0,  // Disable SSL host verification
+                CURLOPT_SSL_VERIFYPEER => 0   // Disable SSL certificate verification
+            ));
+
+            $response = curl_exec($curl);
+            if ($response === false) {
+                $error = curl_error($curl);
+                curl_close($curl);
+                return response()->json(['error' => $error], 500); // Return the cURL error
+            }
+
+            curl_close($curl);
+        } catch (\Exception $exception) {
+            $this->insert_error(99999, "PUSH NOTIF=>" . $exception->getMessage());
         }
     }
 }
