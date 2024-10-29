@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Hash;
 class ReferralController extends Controller
 {
 
-    protected $jwt_token, $bearer_token;
+    protected $jwt_token;
 
     public function __construct()
     {
@@ -85,7 +85,7 @@ class ReferralController extends Controller
                 $referral->diagnosis = $request->diagnosis;
                 $referral->chief_complaint = $request->chiefComplaint;
                 $referral->department = $request->department;
-                $referral->referring_hospital = $request->referring_hospital;
+                $referral->referrinsg_hospital = $request->referring_hospital;
                 $referral->date_created = $request->date_referred;
                 $referral->save();
 
@@ -686,7 +686,8 @@ class ReferralController extends Controller
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 10,
                 CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_FOLLOWLOCATION
+                => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'POST',
                 CURLOPT_POSTFIELDS => json_encode($payload),
