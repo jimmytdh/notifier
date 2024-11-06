@@ -312,36 +312,9 @@ class ReferralController extends Controller
             $logs->destination = $request->department;
             $logs->remarks = $request->remarks;
             $logs->save();
-
-            #CURL PUSH NOTIFICATION
-//            $to = "/topics/referrals_" . $request->topic;
-//            $data = array('age' => $request->age, 'patient' => $request->patient, 'hospital_referrer' => $request->referring_hospital, 'sex' => $request->gender);
-//            $post_fields = array('to' => $to, 'data' => $data);
-//            $curl = curl_init();
-//            #UNCOMMENT THIS WHEN IN PRODUCTION
-//            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-//            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-//            ####################################
-//            curl_setopt_array($curl, array(
-//                CURLOPT_URL => 'https://fcm.googleapis.com/fcm/send',
-//                CURLOPT_RETURNTRANSFER => true,
-//                CURLOPT_ENCODING => '',
-//                CURLOPT_MAXREDIRS => 10,
-//                CURLOPT_TIMEOUT => 0,
-//                CURLOPT_FOLLOWLOCATION => true,
-//                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//                CURLOPT_CUSTOMREQUEST => 'POST',
-//                CURLOPT_POSTFIELDS => json_encode($post_fields),
-//                CURLOPT_HTTPHEADER => array(
-//                    'Content-Type: application/json',
-//                    'Authorization: key=AAAAU6ekIBA:APA91bEtfmASYObVAvEasSdtyaBqz6e0yi9gJrZ0J9fSxdYpDCdf6JWeN-Kbs7O-sEwEGoGxIn6cIw52RLi-Z2iRH2XfmHf2KH3xDdPWV4Of5C_GxJlq1rstQoNVCFzs_K_W3INFD0ks'
-//                ),
-//            ));
-//
-//            curl_exec($curl);
-//            curl_close($curl);
             return response(['code' => 200, 'message' => "Referral successfully forwarded"]);
         } catch (\Exception $exception) {
+            self::insert_error(Auth::id(), $exception->getMessage());
             return response(['code' => 500, 'message' => $exception->getMessage()]);
         }
     }
@@ -410,7 +383,7 @@ class ReferralController extends Controller
             #TODO: THIS ACTION TAG AS DONE
             return ['code' => 200, 'message' => 'Tagged successfully'];
         } catch (\Exception $err) {
-            self::insertError($err->getMessage());
+            self::insert_error(Auth::id(), $err->getMessage());
             return ['code' => 500, 'message' => $err->getMessage()];
         }
     }
@@ -457,7 +430,7 @@ class ReferralController extends Controller
 
             return ['code' => 200, 'message' => 'Tagged successfully'];
         } catch (\Exception $err) {
-            self::insertError($err->getMessage());
+            self::insert_error(Auth::id(), $err->getMessage());
             return ['code' => 500, 'message' => $err->getMessage()];
         }
     }
