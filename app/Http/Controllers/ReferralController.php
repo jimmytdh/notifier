@@ -85,7 +85,7 @@ class ReferralController extends Controller
                 $referral->diagnosis = $request->diagnosis;
                 $referral->chief_complaint = $request->chiefComplaint;
                 $referral->department = $request->department;
-                $referral->referrinsg_hospital = $request->referring_hospital;
+                $referral->referring_hospital = $request->referring_hospital;
                 $referral->date_created = $request->date_referred;
                 $referral->save();
 
