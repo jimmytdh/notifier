@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Firebase\JWT\JWT;
 use Illuminate\Console\Command;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -45,79 +46,227 @@ class MyScheduledTask extends Command
     public function handle()
     {
         try {
-            $codes = DB::table('csmc_notifier.referrals as r')
-                ->join('csmc_notifier.departments as d', 'r.department', '=', 'd.department')
-                ->where(function ($query) {
-                    $query->where('status', '!=', 'DONE')
-                        ->orWhereNull('status');
-                })
-                ->groupBy('r.department')
-                ->select(DB::raw('CONCAT("referrals_", d.code) AS prefixed_code'))
-                ->pluck('prefixed_code')
-                ->toArray();
+            $now = Carbon::now();
 
+            // Part 1: Notify referrals that have been idle for 15 minutes
+            $this->notifyIdleReferrals($now);
 
-
-            if (!empty($codes)) {
-                $curl = curl_init();
-                $bearer_token = 'Authorization: Bearer ' . $this->generateBearerToken();
-                $chunks = array_chunk($codes, 5); // Split codes into chunks of 5
-                foreach ($chunks as $chunk) {
-                    $condition = '';
-                    foreach ($chunk as $code) {
-                        $condition .= "'$code' in topics || ";
-                    }
-                    $condition = rtrim($condition, " || "); // Remove the trailing " || "
-
-                    // Updated payload structure to match FCM's requirements
-                    $payload = json_encode([
-                        "message" => [
-                            "condition" => $condition,
-                            "android" => [
-                                "priority" => "high"
-                            ],
-                            "notification" => [
-                                "title" => "Hi there",
-                                "body" => "You have a pending referral that requires action."
-                            ]
-                        ]
-                    ]);
-
-                    $contentLength = strlen($payload);
-
-                    curl_setopt_array($curl, [
-                        CURLOPT_URL => 'https://fcm.googleapis.com/v1/projects/notifier-5e4e8/messages:send',
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_ENCODING => '',
-                        CURLOPT_MAXREDIRS => 10,
-                        CURLOPT_TIMEOUT => 0,
-                        CURLOPT_FOLLOWLOCATION => true,
-                        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                        CURLOPT_POST => true,
-                        CURLOPT_POSTFIELDS => $payload,
-                        CURLOPT_HTTPHEADER => [
-                            $bearer_token,
-                            'Content-Type: application/json',
-                            'Content-Length: ' . $contentLength  // Add Content-Length header
-                        ],
-                        CURLOPT_SSL_VERIFYHOST => 0,
-                        CURLOPT_SSL_VERIFYPEER => 0
-                    ]);
-
-                    $response = curl_exec($curl);
-                    if (curl_errno($curl)) {
-                        Log::error('FCM Error: ' . curl_error($curl));
-                    } else {
-                        Log::info('FCM Responses: ' . $response);
-                    }
-                    curl_close($curl);
-                }
-            }
+            // Part 2: Forward referrals idle for 30 minutes to EMED
+            $this->forwardIdleReferralsToEmed($now);
 
         } catch (\Exception $exception) {
             Log::error("Notifier Error: " . $exception->getMessage());
         }
+
+//        try {
+//            $codes = DB::table('csmc_notifier.referrals as r')
+//                ->join('csmc_notifier.departments as d', 'r.department', '=', 'd.department')
+//                ->where(function ($query) {
+//                    $query->where('status', '!=', 'DONE')
+//                        ->orWhereNull('status');
+//                })
+//                ->groupBy('r.department')
+//                ->select(DB::raw('CONCAT("referrals_", d.code) AS prefixed_code'))
+//                ->pluck('prefixed_code')
+//                ->toArray();
+//
+//
+//
+//
+//            if (!empty($codes)) {
+//                $curl = curl_init();
+////                $bearer_token = 'Authorization: Bearer ' . $this->generateBearerToken();
+//                $bearer_token = "Sample bearer Token";
+//                $chunks = array_chunk($codes, 5); // Split codes into chunks of 5
+//                foreach ($chunks as $chunk) {
+//                    $condition = '';
+//                    foreach ($chunk as $code) {
+//                        $condition .= "'$code' in topics || ";
+//                    }
+//                    $condition = rtrim($condition, " || "); // Remove the trailing " || "
+//
+//                    // Updated payload structure to match FCM's requirements
+//                    $payload = json_encode([
+//                        "message" => [
+//                            "condition" => $condition,
+//                            "android" => [
+//                                "priority" => "high"
+//                            ],
+//                            "notification" => [
+//                                "title" => "Hi there",
+//                                "body" => "You have a pending referral that requires action."
+//                            ]
+//                        ]
+//                    ]);
+//
+//                    $contentLength = strlen($payload);
+//
+//                    curl_setopt_array($curl, [
+//                        CURLOPT_URL => 'https://fcm.googleapis.com/v1/projects/notifier-5e4e8/messages:send',
+//                        CURLOPT_RETURNTRANSFER => true,
+//                        CURLOPT_ENCODING => '',
+//                        CURLOPT_MAXREDIRS => 10,
+//                        CURLOPT_TIMEOUT => 0,
+//                        CURLOPT_FOLLOWLOCATION => true,
+//                        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+//                        CURLOPT_POST => true,
+//                        CURLOPT_POSTFIELDS => $payload,
+//                        CURLOPT_HTTPHEADER => [
+//                            $bearer_token,
+//                            'Content-Type: application/json',
+//                            'Content-Length: ' . $contentLength  // Add Content-Length header
+//                        ],
+//                        CURLOPT_SSL_VERIFYHOST => 0,
+//                        CURLOPT_SSL_VERIFYPEER => 0
+//                    ]);
+//
+//                    $response = curl_exec($curl);
+//                    if (curl_errno($curl)) {
+//                        Log::error('FCM Error: ' . curl_error($curl));
+//                    } else {
+//                        Log::info('FCM Responses: ' . $response);
+//                    }
+//                    curl_close($curl);
+//                }
+//            }
+//
+//        } catch (\Exception $exception) {
+//            Log::error("Notifier Error: " . $exception->getMessage());
+//        }
         return 0;
+    }
+
+    private function notifyIdleReferrals()
+    {
+        $idleReferrals = DB::table('logs as l')
+            ->join('csmc_notifier.referrals as r', 'l.referral_id', '=', 'r.id')
+            ->join('csmc_notifier.departments as d', 'r.department', '=', 'd.department')
+            ->where(function ($query) {
+                $query->where('r.status', '!=', 'DONE')
+                    ->orWhereNull('r.status');
+            })
+            ->whereRaw('TIMESTAMPDIFF(MINUTE, l.date_forwarded, ?) >= 15', [Carbon::now()])
+            ->select('r.department', DB::raw('MAX(r.id) as id'), DB::raw('MAX(d.code) as code'), DB::raw('MAX(l.date_forwarded) as date_forwarded'))
+            ->groupBy('r.department')
+            ->get();
+
+        $condtion = '';
+        foreach ($idleReferrals as $referral) {
+            $condtion .= "'$referral->code' in topics || ";
+        }
+        $condtion = rtrim($condtion, " || ");
+
+        $payload = json_encode([
+            "message" => [
+                "condition" => $condtion,
+                "android" => [
+                    "priority" => "high"
+                ],
+                "notification" => [
+                    "title" => "Hi there",
+                    "body" => "You have a pending referral that requires action."
+                ]
+            ]
+        ]);
+
+        $this->sendPushNotification($payload);
+        Log::info("notifyIdleReferrals => " . $payload);
+    }
+
+    private function forwardIdleReferralsToEmed(Carbon $now)
+    {
+        // Fetch idle referrals grouped by department
+        $idleReferrals = DB::table('logs as l')
+            ->join('csmc_notifier.referrals as r', 'l.referral_id', '=', 'r.id')
+            ->join('csmc_notifier.departments as d', 'r.department', '=', 'd.department')
+            ->where(function ($query) {
+                $query->where('r.status', '!=', 'DONE')
+                    ->orWhereNull('r.status');
+            })
+            ->whereRaw('TIMESTAMPDIFF(MINUTE, l.date_forwarded, ?) >= 30', [$now])
+            ->select('r.id', 'd.code', 'r.patient', 'r.department', 'l.date_forwarded')
+            ->get()
+            ->groupBy('department'); // Group referrals by department
+
+
+        $condtion = '';
+        foreach ($idleReferrals as $department => $referrals) {
+            $departmentCode = $referrals->first()->code;
+            $condtion .= "'referrals_$departmentCode' in topics || ";
+
+            $referralIds = $referrals->pluck('id');
+            DB::table('csmc_notifier.referrals')
+                ->whereIn('id', $referralIds)
+                ->update(['department' => 'EMED']);
+
+            $logEntries = $referrals->map(function ($referral) use ($now) {
+                return [
+                    'referral_id' => $referral->id,
+                    'forwarded_by' => '99999999',
+                    'tagged_by' => null,
+                    'origin' => $referral->department,
+                    'destination' => 'EMED',
+                    'remarks' => 'Forwarded after 30 minutes of inactivity.',
+                    'date_tagged' => null,
+                    'date_forwarded' => $now,
+                ];
+            })->toArray();
+
+            DB::table('logs')->insert($logEntries);
+        }
+
+        $condtion = rtrim($condtion, " || ");
+        $payload = json_encode([
+            "message" => [
+                "condition" => $condtion,
+                "android" => [
+                    "priority" => "high"
+                ],
+                "notification" => [
+                    "title" => "Referrals Forwarded to EMED",
+                    "body" => "Some referrals been idle for 30 minutes and have been forwarded to EMED."
+                ]
+            ]
+        ]);
+
+        $this->sendPushNotification($payload);
+
+        Log::info("forwardIdleReferralsToEmed => " . $payload);
+    }
+
+
+    private function sendPushNotification(string $payload)
+    {
+        $curl = curl_init();
+        $bearer_token = 'Authorization: Bearer ' . $this->generateBearerToken();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://fcm.googleapis.com/v1/projects/notifier-5e4e8/messages:send',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_HTTPHEADER => [
+                $bearer_token,
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($payload)
+            ],
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSL_VERIFYPEER => 0
+        ]);
+
+        $response = curl_exec($curl);
+
+        if (curl_errno($curl)) {
+            Log::error('FCM Error: ' . curl_error($curl));
+        } else {
+            Log::info('FCM Response: ' . $response);
+        }
+
+        curl_close($curl);
     }
 
     public function generateBearerToken()

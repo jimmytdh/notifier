@@ -314,7 +314,6 @@ class ReferralController extends Controller
             $logs->save();
             return response(['code' => 200, 'message' => "Referral successfully forwarded"]);
         } catch (\Exception $exception) {
-            self::insert_error(Auth::id(), $exception->getMessage());
             return response(['code' => 500, 'message' => $exception->getMessage()]);
         }
     }
@@ -383,7 +382,7 @@ class ReferralController extends Controller
             #TODO: THIS ACTION TAG AS DONE
             return ['code' => 200, 'message' => 'Tagged successfully'];
         } catch (\Exception $err) {
-            self::insert_error(Auth::id(), $err->getMessage());
+            self::insertError($err->getMessage());
             return ['code' => 500, 'message' => $err->getMessage()];
         }
     }
@@ -430,7 +429,7 @@ class ReferralController extends Controller
 
             return ['code' => 200, 'message' => 'Tagged successfully'];
         } catch (\Exception $err) {
-            self::insert_error(Auth::id(), $err->getMessage());
+            self::insertError($err->getMessage());
             return ['code' => 500, 'message' => $err->getMessage()];
         }
     }
