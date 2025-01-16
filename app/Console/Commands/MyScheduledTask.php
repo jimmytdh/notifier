@@ -169,8 +169,7 @@ class MyScheduledTask extends Command
             ]
         ]);
 
-        $this->sendPushNotification($payload);
-        Log::info("notifyIdleReferrals => " . $payload);
+        $this->sendPushNotification($payload, "notifyIdleReferrals");
     }
 
     private function forwardIdleReferralsToEmed(Carbon $now)
@@ -189,7 +188,7 @@ class MyScheduledTask extends Command
             ->groupBy('department'); // Group referrals by department
 
 
-        $condtion = '';
+        $condtion = "'referrals_EMED' in topics || ";
         foreach ($idleReferrals as $department => $referrals) {
             $departmentCode = $referrals->first()->code;
             $condtion .= "'referrals_$departmentCode' in topics || ";
@@ -229,13 +228,11 @@ class MyScheduledTask extends Command
             ]
         ]);
 
-        $this->sendPushNotification($payload);
-
-        Log::info("forwardIdleReferralsToEmed => " . $payload);
+        $this->sendPushNotification($payload,"forwardIdleReferralsToEmed");
     }
 
 
-    private function sendPushNotification(string $payload)
+    private function sendPushNotification(string $payload, string $from)
     {
         $curl = curl_init();
         $bearer_token = 'Authorization: Bearer ' . $this->generateBearerToken();
@@ -261,9 +258,9 @@ class MyScheduledTask extends Command
         $response = curl_exec($curl);
 
         if (curl_errno($curl)) {
-            Log::error('FCM Error: ' . curl_error($curl));
+            Log::error($from . " ERROR =>" . curl_error($curl));
         } else {
-            Log::info('FCM Response: ' . $response);
+            Log::error($from . " RESPONSE =>" . $response);
         }
 
         curl_close($curl);
