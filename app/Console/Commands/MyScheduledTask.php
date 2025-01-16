@@ -49,10 +49,10 @@ class MyScheduledTask extends Command
             $now = Carbon::now();
 
             // Part 1: Notify referrals that have been idle for 15 minutes
-            $this->notifyIdleReferrals($now);
+            $this->notifyIdleReferrals();
 
             // Part 2: Forward referrals idle for 30 minutes to EMED
-            $this->forwardIdleReferralsToEmed($now);
+            $this->forwardIdleReferralsToEmed();
 
         } catch (\Exception $exception) {
             Log::error("Notifier Error: " . $exception->getMessage());
@@ -146,9 +146,20 @@ class MyScheduledTask extends Command
                     ->orWhereNull('r.status');
             })
             ->whereRaw('TIMESTAMPDIFF(MINUTE, l.date_forwarded, ?) >= 15', [Carbon::now()])
-            ->select('r.department', DB::raw('MAX(r.id) as id'), DB::raw('MAX(d.code) as code'), DB::raw('MAX(l.date_forwarded) as date_forwarded'))
+            ->where('r.department', '!=', 'EMED')  // Exclude department EMED
+            ->select(
+                'r.department',
+                DB::raw('MAX(r.id) as id'),
+                DB::raw('MAX(d.code) as code'),
+                DB::raw('MAX(l.date_forwarded) as date_forwarded') // Get the latest date_forwarded
+            )
             ->groupBy('r.department')
             ->get();
+
+        if(count($idleReferrals) < 1){
+            Log::error("NOTHING");
+            return 0;
+        }
 
         $condtion = '';
         foreach ($idleReferrals as $referral) {
@@ -172,7 +183,7 @@ class MyScheduledTask extends Command
         $this->sendPushNotification($payload, "notifyIdleReferrals");
     }
 
-    private function forwardIdleReferralsToEmed(Carbon $now)
+    private function forwardIdleReferralsToEmed()
     {
         // Fetch idle referrals grouped by department
         $idleReferrals = DB::table('logs as l')
@@ -182,11 +193,23 @@ class MyScheduledTask extends Command
                 $query->where('r.status', '!=', 'DONE')
                     ->orWhereNull('r.status');
             })
-            ->whereRaw('TIMESTAMPDIFF(MINUTE, l.date_forwarded, ?) >= 30', [$now])
-            ->select('r.id', 'd.code', 'r.patient', 'r.department', 'l.date_forwarded')
+            ->whereRaw('TIMESTAMPDIFF(MINUTE, l.date_forwarded, ?) >= 30', [Carbon::now()])
+            ->where('r.department', '!=', 'EMED')
+            ->select(
+                'r.id',
+                'd.code',
+                'r.patient',
+                'r.department',
+                DB::raw('MAX(l.date_forwarded) as date_forwarded')  // Get the latest date_forwarded for each referral
+            )
+            ->groupBy('r.id', 'd.code', 'r.patient', 'r.department')  // Group by the referral details
             ->get()
-            ->groupBy('department'); // Group referrals by department
+            ->groupBy('department');
 
+        if(count($idleReferrals) < 1){
+            Log::error("NOTHING");
+            return 0;
+        }
 
         $condtion = "'referrals_EMED' in topics || ";
         foreach ($idleReferrals as $department => $referrals) {
@@ -198,7 +221,7 @@ class MyScheduledTask extends Command
                 ->whereIn('id', $referralIds)
                 ->update(['department' => 'EMED']);
 
-            $logEntries = $referrals->map(function ($referral) use ($now) {
+            $logEntries = $referrals->map(function ($referral)  {
                 return [
                     'referral_id' => $referral->id,
                     'forwarded_by' => '99999999',
@@ -207,7 +230,7 @@ class MyScheduledTask extends Command
                     'destination' => 'EMED',
                     'remarks' => 'Forwarded after 30 minutes of inactivity.',
                     'date_tagged' => null,
-                    'date_forwarded' => $now,
+                    'date_forwarded' => Carbon::now(),
                 ];
             })->toArray();
 
