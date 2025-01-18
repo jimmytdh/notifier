@@ -185,7 +185,7 @@ class MyScheduledTask extends Command
 
     private function forwardIdleReferralsToEmed()
     {
-        // Fetch idle referrals grouped by department
+        // Fetch idle referrals where the latest `date_forwarded` exceeds 30 minutes
         $idleReferrals = DB::table('logs as l')
             ->join('csmc_notifier.referrals as r', 'l.referral_id', '=', 'r.id')
             ->join('csmc_notifier.departments as d', 'r.department', '=', 'd.department')
@@ -193,35 +193,36 @@ class MyScheduledTask extends Command
                 $query->where('r.status', '!=', 'DONE')
                     ->orWhereNull('r.status');
             })
-            ->whereRaw('TIMESTAMPDIFF(MINUTE, l.date_forwarded, ?) >= 30', [Carbon::now()])
-            ->where('r.department', '!=', 'EMED')
+            ->whereNotNull('l.date_forwarded') // Ensure date_forwarded exists
             ->select(
                 'r.id',
                 'd.code',
                 'r.patient',
                 'r.department',
-                DB::raw('MAX(l.date_forwarded) as date_forwarded')  // Get the latest date_forwarded for each referral
+                DB::raw('MAX(l.date_forwarded) as latest_date_forwarded') // Get the latest `date_forwarded`
             )
-            ->groupBy('r.id', 'd.code', 'r.patient', 'r.department')  // Group by the referral details
+            ->groupBy('r.id', 'd.code', 'r.patient', 'r.department')
+            ->havingRaw('TIMESTAMPDIFF(MINUTE, MAX(l.date_forwarded), ?) >= 30', [Carbon::now()]) // Check idle time
+            ->where('r.department', '!=', 'EMED') // Exclude referrals already in EMED
             ->get()
             ->groupBy('department');
 
-        if(count($idleReferrals) < 1){
-            Log::error("NOTHING");
+        if ($idleReferrals->isEmpty()) {
+            Log::info("No idle referrals to forward to EMED.");
             return 0;
         }
 
-        $condtion = "'referrals_EMED' in topics || ";
+        $condition = "'referrals_EMED' in topics || ";
         foreach ($idleReferrals as $department => $referrals) {
             $departmentCode = $referrals->first()->code;
-            $condtion .= "'referrals_$departmentCode' in topics || ";
+            $condition .= "'referrals_$departmentCode' in topics || ";
 
             $referralIds = $referrals->pluck('id');
             DB::table('csmc_notifier.referrals')
                 ->whereIn('id', $referralIds)
                 ->update(['department' => 'EMED']);
 
-            $logEntries = $referrals->map(function ($referral)  {
+            $logEntries = $referrals->map(function ($referral) {
                 return [
                     'referral_id' => $referral->id,
                     'forwarded_by' => '99999999',
@@ -237,22 +238,23 @@ class MyScheduledTask extends Command
             DB::table('logs')->insert($logEntries);
         }
 
-        $condtion = rtrim($condtion, " || ");
+        $condition = rtrim($condition, " || ");
         $payload = json_encode([
             "message" => [
-                "condition" => $condtion,
+                "condition" => $condition,
                 "android" => [
                     "priority" => "high"
                 ],
                 "notification" => [
                     "title" => "Referrals Forwarded to EMED",
-                    "body" => "Some referrals been idle for 30 minutes and have been forwarded to EMED."
+                    "body" => "Some referrals have been idle for 30 minutes and have been forwarded to EMED."
                 ]
             ]
         ]);
 
-        $this->sendPushNotification($payload,"forwardIdleReferralsToEmed");
+        $this->sendPushNotification($payload, "forwardIdleReferralsToEmed");
     }
+
 
 
     private function sendPushNotification(string $payload, string $from)
