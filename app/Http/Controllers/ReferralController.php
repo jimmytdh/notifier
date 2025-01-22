@@ -84,7 +84,7 @@ class ReferralController extends Controller
                 $referral->age = $request->age;
                 $referral->diagnosis = $request->diagnosis;
                 $referral->chief_complaint = $request->chiefComplaint;
-                $referral->department = $request->department;
+                $referral->department = 'ER';
                 $referral->referring_hospital = $request->referring_hospital;
                 $referral->date_created = $request->date_referred;
                 $referral->save();
@@ -93,7 +93,7 @@ class ReferralController extends Controller
                 $logs->referral_id = $referral->id;
                 $logs->forwarded_by = 0;
                 $logs->origin = $request->referring_hospital;
-                $logs->destination = 'ER';
+                $logs->destination = 'EMERGENCY ROOM';
                 $logs->remarks = '';
                 $logs->date_forwarded = Carbon::now();
                 $logs->save();
