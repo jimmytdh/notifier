@@ -61,7 +61,7 @@
                 $("#referral_list").empty();
                 $("#btn_next").addClass("d-none");
                 if (data.results.length < 1) {
-                    $("#referral_list").append("<tr><td colspan='6'>No record found</td></tr>");
+                    $("#referral_list").append("<tr><td colspan='7'>No record found</td></tr>");
                     return;
                 }
 
@@ -83,6 +83,7 @@
                                     <td>` + it.age + `</td>
                                     <td>` + it.gender + `</td>
                                     <td>` + department + `</td>
+                                    <td>` + it.remarks + `</td>
                                     <td>` + moment(it.created_at).format("MM/DD/YYYY hh:mm:ss A") + `</td>
                                     <td>
                                          <button class='btn btn-sm' style="background: transparent" onClick='deleteQueue("` + it.id + `")'>
@@ -96,7 +97,7 @@
 
             }).catch(err => {
             $("#referral_list").empty();
-            $("#referral_list").append("<tr><td colspan='6'>" + err.message + "</td></tr>");
+            $("#referral_list").append("<tr><td colspan='7'>" + err.message + "</td></tr>");
         });
     }
 

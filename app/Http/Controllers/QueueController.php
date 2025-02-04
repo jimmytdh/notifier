@@ -24,7 +24,7 @@ class QueueController extends Controller
                         $query->where('department', '=', $department);
                     }
                 })
-                ->get(['id', 'referring_hospital', 'patient', 'age', 'gender', 'department', 'created_at']);
+                ->get(['id', 'referring_hospital', 'patient', 'age', 'gender', 'department','remarks', 'created_at']);
             return response()->json(['results' => $list]);
         } catch (\Exception $exception) {
             return response()->json(['error' => $exception->getMessage()], 500);

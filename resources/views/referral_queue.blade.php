@@ -31,6 +31,7 @@
                     <th>Age</th>
                     <th>Gender</th>
                     <th>Department</th>
+                    <th>Remarks</th>
                     <th>Date Referred</th>
                     <th style="width: 4%"></th>
                 </tr>
