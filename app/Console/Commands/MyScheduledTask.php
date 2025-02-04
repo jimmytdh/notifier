@@ -146,7 +146,6 @@ class MyScheduledTask extends Command
                     ->orWhereNull('r.status');
             })
             ->whereRaw('TIMESTAMPDIFF(MINUTE, l.date_forwarded, ?) >= 15', [Carbon::now()])
-            ->where('r.department', '!=', 'EMED')  // Exclude department EMED
             ->select(
                 'r.department',
                 DB::raw('MAX(r.id) as id'),

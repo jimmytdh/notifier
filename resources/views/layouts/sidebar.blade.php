@@ -21,5 +21,11 @@
                     <span>Track Referrals</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="{{ route('referral_queue') }}">
+                    <i class="bi bi-grid"></i>
+                    <span>Referral Queue</span>
+                </a>
+            </li>
     </ul>
 </aside><!-- End Sidebar-->

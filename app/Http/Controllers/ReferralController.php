@@ -13,6 +13,7 @@ use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 
@@ -680,6 +681,28 @@ class ReferralController extends Controller
             curl_close($curl);
         } catch (\Exception $exception) {
             $this->insert_error(99999, "PUSH NOTIF=>" . $exception->getMessage());
+        }
+    }
+
+    //QUEUE FUNCTION
+    public function store(Request $request)
+    {
+        try {
+            DB::table('csmc_notifier.queue_referrals')->insert([
+                'referring_hospital' => $request->referring_hospital,
+                'patient' => $request->patient,
+                'age' => $request->age,
+                'gender' => $request->gender,
+                'department' => $request->department,
+                'queued_by' => $request->userid,
+                'remarks' => $request->remarks,
+                'created_at' => Carbon::now()
+            ]);
+
+            return ['code' => 200, 'message' => 'Queued successfully'];
+        } catch (\Exception $exception) {
+            $this->insert_error(99999, $exception->getMessage());
+            return ['code' => 500, 'message' => $exception];
         }
     }
 }

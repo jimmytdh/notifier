@@ -53,9 +53,15 @@ Route::group(['middleware' => 'auth'], function () {
         return view('referrals');
     })->name('referrals');
 
+    Route::get('/referral_queue', function () {
+        return view('referral_queue');
+    })->name('referral_queue');
+
     Route::get('/get_referrals', [\App\Http\Controllers\ReferralController::class, 'getReferrals'])->name('getReferrals');
     Route::get('/get_all_referrals', [\App\Http\Controllers\ReferralController::class, 'getAllReferrals'])->name('getAllReferrals');
+    Route::get('/get_queue', [\App\Http\Controllers\QueueController::class, 'index'])->name('getQueue');
     Route::get('/load_logs', [\App\Http\Controllers\ReferralController::class, 'loadLogs'])->name('loadLogs');
+    Route::delete('/delete/referral', [\App\Http\Controllers\QueueController::class, 'delete'])->name('deleteQueue');
 
     Route::post('/insert_referral', [\App\Http\Controllers\ReferralController::class, 'insertReferral'])->name('insertReferral');
     Route::post('/forward_referral', [\App\Http\Controllers\ReferralController::class, 'forwardReferral'])->name('forwardReferral');
