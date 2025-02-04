@@ -32,7 +32,7 @@ Route::get('/logout', function () {
 })->name('logout');
 
 Route::get('/download', function () {
-    $url = url('../notifier/apk/notifier_apk_1.2.apk');
+    $url = url('../notifier/apk/notifier_apk_1.3.apk');
     return redirect()->to($url);
 });
 
