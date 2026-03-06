@@ -5,6 +5,7 @@
     let referral_id;
     let page = 0;
     const patient_modal = new bootstrap.Modal(document.getElementById('patient_modal'));
+    const forward_modal = new bootstrap.Modal(document.getElementById('forward_modal'));
     $(document).ready(function () {
         observe($("#user_code").text().trim(), function (snapshot) {
             if (!is_init) return;
@@ -25,6 +26,13 @@
             getReferrals();
         });
 
+        $("#search_patient").keydown(function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                $("#btn_search").click();
+            }
+        });
+
         $("#btn_next").click(function () {
             page++;
             getReferrals();
@@ -41,9 +49,10 @@
         });
 
         $("#btn_done").click(function () {
-            let remarks = $("#common_remarks").val().trim();
-            if (remarks == "")
-                remarks = "TAGGED AS DONE";
+            let remarks = prompt("Remarks (optional):", "TAGGED AS DONE");
+            if (remarks === null) return;
+            remarks = remarks.trim();
+            if (remarks === "") remarks = "TAGGED AS DONE";
 
             if (confirm("Are you sure you want to tag this as done?")) {
                 $(this).prop("disabled", true);
@@ -74,23 +83,78 @@
             }
         });
 
+        $("#btn_queue").click(function () {
+            if (!referral_id) {
+                toastr.error("No selected patient", "Error");
+                return;
+            }
+
+            const referring_hospital = $("#referral_id_" + referral_id + " td:eq(0)").text().trim();
+            const patient = $("#referral_id_" + referral_id + " td:eq(1)").text().trim();
+            const age = $("#referral_id_" + referral_id + " td:eq(2)").text().trim();
+            const gender = $("#referral_id_" + referral_id + " td:eq(3)").text().trim();
+            const department = $("#referral_id_" + referral_id + " td:eq(6)").text().trim();
+            const remarks = "QUEUED FROM " + $("#user_department").text().trim();
+
+            const params = {
+                referring_hospital: referring_hospital,
+                patient: patient,
+                age: age,
+                gender: gender,
+                department: department,
+                remarks: remarks
+            };
+
+            $(this).prop("disabled", true);
+            $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
+            fetch('{{ route('insertQueue') }}', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                body: JSON.stringify(params)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    $("#btn_queue").prop("disabled", false);
+                    $("#btn_queue").html("QUEUE PATIENT");
+                    if (data.code == 500) {
+                        toastr.error(data.message || "Unable to queue patient", "Error");
+                        return;
+                    }
+
+                    toastr.success(data.message, "Information");
+                }).catch(err => {
+                $("#btn_queue").prop("disabled", false);
+                $("#btn_queue").html("QUEUE PATIENT");
+                toastr.error(err.message || "Unable to queue patient", "Error");
+            });
+        });
+
         $("#btn_send").click(function () {
+            $("#forward_department").val("");
+            $("#forward_remarks").val("");
+            forward_modal.show();
+        });
+
+        $("#btn_confirm_forward").click(function () {
             $(".is-invalid").removeClass("is-invalid");
             const referring_hospital = $("#referral_id_" + referral_id + " td:eq(0)").text();
             const patient = $("#referral_id_" + referral_id + " td:eq(1)").text();
             const age = $("#referral_id_" + referral_id + " td:eq(2)").text();
             const gender = $("#referral_id_" + referral_id + " td:eq(3)").text();
-            const remarks = $("#common_remarks").val().trim();
-            const topic = $("#department").val();
-            const department = $("#department option:selected").text();
+            const remarks = $("#forward_remarks").val().trim();
+            const topic = $("#forward_department").val();
+            const department = $("#forward_department option:selected").text();
 
             if (topic == "") {
-                $("#department").addClass("is-invalid");
+                $("#forward_department").addClass("is-invalid");
                 return;
             }
 
             if (remarks == "") {
-                $("#common_remarks").addClass("is-invalid");
+                $("#forward_remarks").addClass("is-invalid");
                 return;
             }
 
@@ -118,23 +182,24 @@
             })
                 .then(res => res.json())
                 .then(data => {
-                    $("#btn_send").prop("disabled", false);
-                    $("#btn_send").html("FORWARD TO");
+                    $("#btn_confirm_forward").prop("disabled", false);
+                    $("#btn_confirm_forward").html("Confirm Forward");
                     if (data.code == 500) {
                         toastr.error(data.message, "Ooops");
                         getReferrals();
                         return;
                     }
 
+                    forward_modal.hide();
                     patient_modal.toggle();
-                    $("#common_remarks").val("");
-                    $("#department").val("");
                     toastr.success(data.message, "Information");
                     insert(params.topic, params.patient, function (message) {
                         deleteChild(params.topic);
                     });
                     getReferrals();
                 }).catch(err => {
+                $("#btn_confirm_forward").prop("disabled", false);
+                $("#btn_confirm_forward").html("Confirm Forward");
                 toastr.error(err, "Ooops");
             });
         });

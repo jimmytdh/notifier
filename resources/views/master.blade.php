@@ -4,8 +4,9 @@
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta name="theme-color" content="#0f172a">
 
-    <title>{{ session('access_rights') }}</title>
+    <title>@yield('Title', 'Patient Flow Tracker') - {{ session('access_rights') }}</title>
     <meta content="" name="description">
     <meta content="" name="keywords">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -15,10 +16,9 @@
     <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
     <!-- Google Fonts -->
-{{--    <link href="https://fonts.gstatic.com" rel="preconnect">--}}
-{{--    <link--}}
-{{--        href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"--}}
-{{--        rel="stylesheet">--}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
 <!-- Vendor CSS Files -->
     <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -54,11 +54,14 @@
 @include('layouts.sidebar')
 @include('modals.settings')
 <main id="main" class="main">
-    <div class="pagetitle">
-        <h1>@yield('Title')</h1>
+    <div class="pagetitle page-header">
+        <div>
+            <h1>@yield('Title', 'Patient Tracking')</h1>
+            <div class="page-subtitle">@yield('Subtitle', 'Inter-department patient forwarding from external referrals with full tracking and department notifications.')</div>
+        </div>
     </div>
     <section class="section dashboard">
-        <div class="row">
+        <div class="row g-3">
             @yield('content')
         </div>
     </section>
@@ -68,14 +71,7 @@
 <!-- ======= Footer ======= -->
 <footer id="footer" class="footer">
     <div class="copyright">
-        &copy; Copyright <strong><span>NiceAdmin</span></strong>. All Rights Reserved
-    </div>
-    <div class="credits">
-        <!-- All the links in the footer should remain intact. -->
-        <!-- You can delete the links only if you purchased the pro version. -->
-        <!-- Licensing information: https://bootstrapmade.com/license/ -->
-        <!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
-        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
+        <strong><span>Patient Flow Tracker</span></strong> &copy; {{ date('Y') }}. All rights reserved.
     </div>
 </footer><!-- End Footer -->
 <div class="d-none" id="user_department">{{ session('access_rights') }}</div>

@@ -38,9 +38,9 @@ Route::get('/download', function () {
 
 Route::post('/authenticate', [\App\Http\Controllers\UserController::class, 'authenticate'])->name('authenticate');
 
-Route::group(['middleware' => 'auth'], function () {
+Route::middleware('auth')->group(function () {
     Route::get('/triagge', function () {
-        if(session('code') != 'TRIAGGE') return redirect('/');
+        if (session('code') != 'TRIAGGE') return redirect()->route('login');
         return view('triagge');
     })->name('triagge');
 
@@ -49,7 +49,7 @@ Route::group(['middleware' => 'auth'], function () {
     })->name('track_referrals');
 
     Route::get('/referrals', function () {
-        if(session('code') == 'TRIAGGE') return redirect()->route('/');
+        if (session('code') == 'TRIAGGE') return redirect()->route('login');
         return view('referrals');
     })->name('referrals');
 
@@ -62,6 +62,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/get_queue', [\App\Http\Controllers\QueueController::class, 'index'])->name('getQueue');
     Route::get('/load_logs', [\App\Http\Controllers\ReferralController::class, 'loadLogs'])->name('loadLogs');
     Route::delete('/delete/referral', [\App\Http\Controllers\QueueController::class, 'delete'])->name('deleteQueue');
+    Route::post('/insert_queue', [\App\Http\Controllers\QueueController::class, 'store'])->name('insertQueue');
 
     Route::post('/insert_referral', [\App\Http\Controllers\ReferralController::class, 'insertReferral'])->name('insertReferral');
     Route::post('/forward_referral', [\App\Http\Controllers\ReferralController::class, 'forwardReferral'])->name('forwardReferral');

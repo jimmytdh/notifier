@@ -13,6 +13,13 @@
             getReferrals();
         });
 
+        $("#search_patient").keydown(function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                $("#btn_search").click();
+            }
+        });
+
         $("#btn_next").click(function () {
             page++;
             getReferrals();

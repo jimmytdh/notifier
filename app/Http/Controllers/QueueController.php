@@ -4,26 +4,41 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Kreait\Firebase\Auth;
 
 class QueueController extends Controller
 {
+    private $tableName = 'csmc_notifier.queue_referrals';
+    private $duplicateWindowMinutes = 10;
+
     public function index(Request $request)
     {
         try {
-            $patient = $request->search_patient;
-            $department = $request->search_department;
-            $list = DB::table('csmc_notifier.queue_referrals')
+            $patient = trim($request->search_patient ?? '');
+            $department = trim($request->search_department ?? '');
+            $page = max((int) $request->page, 0);
+
+            $list = DB::table($this->tableName)
                 ->where(function ($query) use ($department, $patient) {
                     if ($patient != "") {
                         $query->where("patient", "LIKE", "%" . $patient . "%");
                     }
 
                     if ($department != "") {
-                        $query->where('department', '=', $department);
+                        if (strtoupper($department) === 'EMERGENCY ROOM') {
+                            $query->where(function ($subQuery) {
+                                $subQuery->where('department', 'LIKE', 'ER%')
+                                    ->orWhere('department', 'LIKE', '%EMERGENCY ROOM%');
+                            });
+                        } else {
+                            $query->where('department', '=', $department);
+                        }
                     }
                 })
+                ->orderBy('created_at', 'desc')
+                ->skip($page * 10)
+                ->take(11)
                 ->get(['id', 'referring_hospital', 'patient', 'age', 'gender', 'department','remarks', 'created_at']);
             return response()->json(['results' => $list]);
         } catch (\Exception $exception) {
@@ -31,10 +46,67 @@ class QueueController extends Controller
         }
     }
 
+    public function store(Request $request)
+    {
+        try {
+            $request->validate([
+                'referring_hospital' => 'required|string|max:255',
+                'patient' => 'required|string|max:255',
+                'age' => 'nullable|max:50',
+                'gender' => 'nullable|string|max:50',
+                'department' => 'nullable|string|max:255',
+                'remarks' => 'nullable|string|max:255',
+            ]);
+
+            $referringHospital = strtoupper(trim($request->referring_hospital));
+            $patient = strtoupper(trim($request->patient));
+            $department = $request->department ? strtoupper(trim($request->department)) : null;
+            $gender = $request->gender ? strtoupper(trim($request->gender)) : null;
+            $age = ($request->age !== null && $request->age !== '') ? trim((string)$request->age) : null;
+            $remarks = $request->remarks ? trim($request->remarks) : null;
+
+            $duplicateSince = Carbon::now()->subMinutes($this->duplicateWindowMinutes);
+            $existing = DB::table($this->tableName)
+                ->where('patient', $patient)
+                ->where(function ($query) use ($department) {
+                    if ($department === null || $department === '') {
+                        $query->whereNull('department')->orWhere('department', '');
+                        return;
+                    }
+                    $query->where('department', $department);
+                })
+                ->where('created_at', '>=', $duplicateSince)
+                ->exists();
+
+            if ($existing) {
+                return response()->json([
+                    'code' => 500,
+                    'message' => 'Patient is already queued for this department in the last ' . $this->duplicateWindowMinutes . ' minutes'
+                ]);
+            }
+
+            DB::table($this->tableName)->insert([
+                'referring_hospital' => $referringHospital,
+                'patient' => $patient,
+                'age' => $age,
+                'gender' => $gender,
+                'department' => $department,
+                'queued_by' => Auth::id(),
+                'remarks' => $remarks,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ]);
+
+            return response()->json(['code' => 200, 'message' => 'Patient queued successfully']);
+        } catch (\Exception $exception) {
+            return response()->json(['code' => 500, 'message' => $exception->getMessage()], 500);
+        }
+    }
+
     public function delete(Request $request)
     {
         try {
-            DB::table('csmc_notifier.queue_referrals')
+            DB::table($this->tableName)
                 ->where('id', '=', $request->id)
                 ->delete();
 
