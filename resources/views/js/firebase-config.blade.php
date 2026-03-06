@@ -39,6 +39,13 @@
             });
     }
 
+    function observeRemoved(child, callback) {
+        firebase.database().ref(child)
+            .on('child_removed', (data) => {
+                callback(data)
+            });
+    }
+
     function get(child, callback) {
         firebase.database().ref(child).once("value", (data) => {
             callback(data);

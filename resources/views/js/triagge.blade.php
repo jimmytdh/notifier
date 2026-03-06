@@ -219,6 +219,11 @@
             resetPaginationAndReload();
         });
 
+        observeRemoved("23", function () {
+            if (!is_init) return;
+            resetPaginationAndReload();
+        });
+
         get("23", function (snapshots) {
             is_init = true;
             resetPaginationAndReload();
