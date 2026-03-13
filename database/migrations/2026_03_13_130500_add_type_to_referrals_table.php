@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+class AddTypeToReferralsTable extends Migration
+{
     /**
      * Run the migrations.
      *
@@ -12,11 +13,8 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('error_logs', function (Blueprint $table) {
-            $table->id();
-            $table->integer('userid');
-            $table->text('message');
-            $table->timestamp('date_created')->useCurrent();
+        Schema::table('referrals', function (Blueprint $table) {
+            $table->enum('type', ['Referral', 'Manual'])->default('Referral')->after('referring_hospital');
         });
     }
 
@@ -27,6 +25,8 @@ return new class extends Migration {
      */
     public function down()
     {
-        Schema::dropIfExists('error_logs');
+        Schema::table('referrals', function (Blueprint $table) {
+            $table->dropColumn('type');
+        });
     }
-};
+}

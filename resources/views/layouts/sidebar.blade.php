@@ -15,6 +15,12 @@
                     <span>Referrals</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {{ $routeName == 'manual_referral' ? '' : 'collapsed' }}" href="{{ route('manual_referral') }}">
+                    <i class="bi bi-pencil-square"></i>
+                    <span>Manual Referral</span>
+                </a>
+            </li>
         @endif
             <li class="nav-item">
                 <a class="nav-link {{ $routeName == 'track_referrals' ? '' : 'collapsed' }}" href="{{ route('track_referrals') }}">

@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+class CreateErrorLogsTable extends Migration
+{
     /**
      * Run the migrations.
      *
@@ -12,11 +13,10 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('departments', function (Blueprint $table) {
-            $table->id();
-            $table->string('department')->unique();
-            $table->string('code')->unique();
-            $table->timestamp('date_updated')->nullable()->useCurrentOnUpdate();
+        Schema::create('error_logs', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->integer('userid');
+            $table->text('message');
             $table->timestamp('date_created')->useCurrent();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration {
      */
     public function down()
     {
-        Schema::dropIfExists('departments');
+        Schema::dropIfExists('error_logs');
     }
-};
+}

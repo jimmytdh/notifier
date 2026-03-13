@@ -33,6 +33,23 @@
     <link href="assets/css/style.css?v={{ date('ymdhis') }}" rel="stylesheet">
     <link href="css/toastr.min.css?v={{ date('ymdhis') }}" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+    <style>
+        .spa-fade-out {
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 160ms ease, transform 160ms ease;
+        }
+        .spa-fade-in {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 200ms ease, transform 200ms ease;
+        }
+        .spa-loading #spa-content {
+            filter: blur(3px);
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
     <!-- =======================================================
     * Template Name: NiceAdmin - v2.5.0
     * Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/
@@ -56,13 +73,15 @@
 <main id="main" class="main">
     <div class="pagetitle page-header">
         <div>
-            <h1>@yield('Title', 'Patient Tracking')</h1>
-            <div class="page-subtitle">@yield('Subtitle', 'Inter-department patient forwarding from external referrals with full tracking and department notifications.')</div>
+            <h1 id="page-title">@yield('Title', 'Patient Tracking')</h1>
+            <div class="page-subtitle" id="page-subtitle">@yield('Subtitle', 'Inter-department patient forwarding from external referrals with full tracking and department notifications.')</div>
         </div>
     </div>
     <section class="section dashboard">
         <div class="row g-3">
-            @yield('content')
+            <div id="spa-content" class="col-12 p-0">
+                @yield('content')
+            </div>
         </div>
     </section>
 
@@ -183,7 +202,128 @@
     });
 </script>
 @include('js.firebase-config')
-@yield('js')
+<div id="page-scripts">
+    @yield('js')
+</div>
+<script>
+    (function () {
+        const contentEl = document.getElementById('spa-content');
+        const titleEl = document.getElementById('page-title');
+        const subtitleEl = document.getElementById('page-subtitle');
+        const spinner = document.getElementById('spinner');
+
+        function isSameOrigin(url) {
+            try {
+                const target = new URL(url, window.location.origin);
+                return target.origin === window.location.origin;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function setActiveNav(urlPath) {
+            const links = document.querySelectorAll('#sidebar .nav-link');
+            links.forEach(link => {
+                const href = link.getAttribute('href') || '';
+                if (href === urlPath) {
+                    link.classList.remove('collapsed');
+                } else {
+                    link.classList.add('collapsed');
+                }
+            });
+        }
+
+        function runPageScripts(doc) {
+            document.querySelectorAll('script[data-spa-script="1"]').forEach(el => el.remove());
+            const scriptContainer = doc.querySelector('#page-scripts');
+            if (!scriptContainer) return;
+            const scripts = scriptContainer.querySelectorAll('script');
+            scripts.forEach(script => {
+                const newScript = document.createElement('script');
+                if (script.src) {
+                    newScript.src = script.src;
+                } else {
+                    newScript.text = script.textContent;
+                }
+                newScript.setAttribute('data-spa-script', '1');
+                document.body.appendChild(newScript);
+            });
+        }
+
+        function swapTo(doc) {
+            const newContent = doc.querySelector('#spa-content');
+            if (!newContent) {
+                window.location.reload();
+                return;
+            }
+
+            if (window.clearFirebaseListeners) {
+                window.clearFirebaseListeners();
+            }
+
+            contentEl.classList.remove('spa-fade-in');
+            contentEl.classList.add('spa-fade-out');
+            setTimeout(() => {
+                contentEl.innerHTML = newContent.innerHTML;
+                contentEl.classList.remove('spa-fade-out');
+                contentEl.classList.add('spa-fade-in');
+            }, 120);
+
+            const newTitle = doc.title || '';
+            if (newTitle) document.title = newTitle;
+
+            const incomingTitle = doc.querySelector('#page-title');
+            const incomingSubtitle = doc.querySelector('#page-subtitle');
+            if (incomingTitle) titleEl.textContent = incomingTitle.textContent;
+            if (incomingSubtitle) subtitleEl.textContent = incomingSubtitle.textContent;
+
+            runPageScripts(doc);
+            setActiveNav(window.location.pathname);
+        }
+
+        function fetchPage(url, pushState) {
+            if (spinner) spinner.classList.remove('d-none');
+            document.body.classList.add('spa-loading');
+            fetch(url, {headers: {'X-SPA': '1'}})
+                .then(res => res.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    swapTo(doc);
+                    if (pushState) {
+                        history.pushState({}, '', url);
+                    }
+                })
+                .catch(() => window.location.assign(url))
+                .finally(() => {
+                    if (spinner) spinner.classList.add('d-none');
+                    document.body.classList.remove('spa-loading');
+                });
+        }
+
+        function shouldHandleLink(link) {
+            if (!link || !link.href) return false;
+            if (link.target && link.target !== '_self') return false;
+            if (link.hasAttribute('data-no-spa')) return false;
+            if (!isSameOrigin(link.href)) return false;
+            if (link.getAttribute('href').startsWith('#')) return false;
+            return true;
+        }
+
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('a');
+            if (!shouldHandleLink(link)) return;
+            e.preventDefault();
+            const url = link.getAttribute('href');
+            if (url === window.location.pathname) return;
+            fetchPage(url, true);
+        });
+
+        window.addEventListener('popstate', function () {
+            fetchPage(window.location.pathname, false);
+        });
+    })();
+</script>
 </body>
 
 </html>

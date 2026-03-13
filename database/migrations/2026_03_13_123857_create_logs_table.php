@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+class CreateLogsTable extends Migration
+{
     /**
      * Run the migrations.
      *
@@ -13,15 +14,14 @@ return new class extends Migration {
     public function up()
     {
         Schema::create('logs', function (Blueprint $table) {
-
-            $table->id();
-            $table->foreignId('referral_id')->constrained()->cascadeOnDelete();
+            $table->bigIncrements('id');
+            $table->unsignedBigInteger('referral_id')->index('logs_referral_id_foreign');
             $table->integer('forwarded_by');
             $table->integer('tagged_by')->nullable();
             $table->string('origin');
             $table->string('destination');
             $table->string('remarks')->nullable();
-            $table->timestamp('date_tagged')->nullable()->useCurrentOnUpdate();
+            $table->timestamp('date_tagged')->useCurrentOnUpdate()->nullable();
             $table->timestamp('date_forwarded')->nullable()->useCurrent();
         });
     }
@@ -35,4 +35,4 @@ return new class extends Migration {
     {
         Schema::dropIfExists('logs');
     }
-};
+}

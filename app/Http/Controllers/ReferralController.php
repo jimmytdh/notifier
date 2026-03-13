@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class ReferralController extends Controller
 {
@@ -315,6 +316,51 @@ class ReferralController extends Controller
             $logs->save();
             return response(['code' => 200, 'message' => "Referral successfully forwarded"]);
         } catch (\Exception $exception) {
+            return response(['code' => 500, 'message' => $exception->getMessage()]);
+        }
+    }
+
+    public function storeManualReferral(Request $request)
+    {
+        try {
+            $request->validate([
+                'patient' => 'required|string|max:255',
+                'gender' => 'required|string|max:20',
+                'age' => 'required|integer|min:0',
+                'department' => 'required|string|max:255',
+                'code' => 'required|string|max:20',
+                'remarks' => 'required|string|max:500',
+                'diagnosis' => 'nullable|string',
+                'chief_complaint' => 'nullable|string'
+            ]);
+
+            $referral = new Referral;
+            $referral->userid = Auth::id();
+            $referral->firebase_key = (string) Str::uuid();
+            $referral->patient = trim($request->patient);
+            $referral->gender = trim($request->gender);
+            $referral->age = (int) $request->age;
+            $referral->diagnosis = $request->diagnosis;
+            $referral->chief_complaint = $request->chief_complaint;
+            $referral->department = $request->department;
+            $referral->referring_hospital = session('access_rights');
+            $referral->date_created = Carbon::now();
+            $referral->type = 'Manual';
+            $referral->save();
+
+            $logs = new Log;
+            $logs->referral_id = $referral->id;
+            $logs->forwarded_by = Auth::id();
+            $logs->origin = session('access_rights');
+            $logs->destination = $request->department;
+            $logs->remarks = $request->remarks;
+            $logs->date_forwarded = Carbon::now();
+            $logs->save();
+
+            $this->forwardPushNotification('referrals_' . $request->code, $referral->referring_hospital, $referral->patient, $referral->age, $referral->gender);
+            return response(['code' => 200, 'message' => 'Manual referral created and forwarded']);
+        } catch (\Exception $exception) {
+            self::insertError($exception->getMessage());
             return response(['code' => 500, 'message' => $exception->getMessage()]);
         }
     }

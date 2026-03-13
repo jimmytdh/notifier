@@ -21,6 +21,7 @@
     };
 
     firebase.initializeApp(firebaseConfig);
+    window.__firebaseListeners = [];
 
     function insert(child, data, callback) {
         firebase.database().ref(child).push().set(data, function (err) {
@@ -33,17 +34,17 @@
     }
 
     function observe(child, callback) {
-        firebase.database().ref(child)
-            .on('child_added', (data) => {
-                callback(data)
-            });
+        const ref = firebase.database().ref(child);
+        const handler = (data) => callback(data);
+        ref.on('child_added', handler);
+        window.__firebaseListeners.push({ref: ref, event: 'child_added', handler: handler});
     }
 
     function observeRemoved(child, callback) {
-        firebase.database().ref(child)
-            .on('child_removed', (data) => {
-                callback(data)
-            });
+        const ref = firebase.database().ref(child);
+        const handler = (data) => callback(data);
+        ref.on('child_removed', handler);
+        window.__firebaseListeners.push({ref: ref, event: 'child_removed', handler: handler});
     }
 
     function get(child, callback) {
@@ -56,5 +57,14 @@
         firebase.database().ref(child).remove();
     }
 
+    function clearFirebaseListeners() {
+        if (!window.__firebaseListeners || window.__firebaseListeners.length < 1) return;
+        window.__firebaseListeners.forEach(item => {
+            try {
+                item.ref.off(item.event, item.handler);
+            } catch (e) {}
+        });
+        window.__firebaseListeners = [];
+    }
 
 </script>

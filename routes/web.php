@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
+use App\Models\Department;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,6 +58,12 @@ Route::middleware('auth')->group(function () {
         return view('referral_queue');
     })->name('referral_queue');
 
+    Route::get('/manual_referral', function () {
+        // if (session('code') == 'TRIAGGE') return redirect()->route('login');
+        $departments = Department::orderBy('department')->get(['code', 'department']);
+        return view('manual_referral', compact('departments'));
+    })->name('manual_referral');
+
     Route::get('/get_referrals', [\App\Http\Controllers\ReferralController::class, 'getReferrals'])->name('getReferrals');
     Route::get('/get_all_referrals', [\App\Http\Controllers\ReferralController::class, 'getAllReferrals'])->name('getAllReferrals');
     Route::get('/get_queue', [\App\Http\Controllers\QueueController::class, 'index'])->name('getQueue');
@@ -65,6 +72,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/insert_queue', [\App\Http\Controllers\QueueController::class, 'store'])->name('insertQueue');
 
     Route::post('/insert_referral', [\App\Http\Controllers\ReferralController::class, 'insertReferral'])->name('insertReferral');
+    Route::post('/manual_referral', [\App\Http\Controllers\ReferralController::class, 'storeManualReferral'])->name('storeManualReferral');
     Route::post('/forward_referral', [\App\Http\Controllers\ReferralController::class, 'forwardReferral'])->name('forwardReferral');
     Route::post('/tag_as_done', [\App\Http\Controllers\ReferralController::class, 'tagAsDone'])->name('tagAsDone');
     Route::post('/tag_as_done_triagge', [\App\Http\Controllers\ReferralController::class, 'tagAsDoneTriagge'])->name('tagAsDoneTriagge');

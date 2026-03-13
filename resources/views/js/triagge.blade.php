@@ -1,247 +1,23 @@
 <script>
-    let current_list = [];
-    let is_init = false;
-    let referral_data;
-    let page = 0;
-    const page_size = 10;
-    let page_cache = [];
-    let next_page_available = false;
-    const patient_modal = new bootstrap.Modal(document.getElementById('patient_modal'));
-    const forward_modal = new bootstrap.Modal(document.getElementById('forward_modal'));
-
-    $(document).ready(function () {
-        $("#activity_container").addClass("d-none");
-        setLoadingState();
-        $("#pagination_container").removeClass("d-none");
-
-        $("#btn_search").click(function () {
-            page = 0;
-            renderReferrals();
-        });
-
-        $("#search_patient, #search_department").keydown(function (e) {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                $("#btn_search").click();
-            }
-        });
-
-        $("#btn_next").click(function () {
-            loadPage(page + 1);
-        });
-
-        $("#btn_prev").click(function () {
-            loadPage(page - 1);
-        });
-
-        $("#btn_done").click(function () {
-            if (!confirm("Are you sure you want to tagged this as DONE?")) return;
-
-            let remarks = prompt("Remarks:", "TAGGED AS DONE");
-            if (remarks === null) return;
-            remarks = remarks.trim();
-            if (remarks == "") {
-                alert("Please specify remarks");
-                return;
-            }
-
-            const params = {
-                firebase_key: referral_data.key,
-                patient: referral_data.patient,
-                gender: referral_data.sex,
-                age: referral_data.age,
-                diagnosis: referral_data.diagnosis,
-                chief_complaint: referral_data.chiefComplaint,
-                referring_hospital: referral_data.referring_hospital,
-                department: "",
-                topic: "",
-                remarks: remarks,
-                date_created: referral_data.date_referred
-            }
-
-            $(this).prop("disabled", true);
-            $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
-            fetch('{{ route('tagAsDoneTriagge') }}', {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "application/json",
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                body: JSON.stringify(params)
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.code == 500) {
-                        toastr.error(data.message, "Ooops");
-                        return;
-                    }
-
-                    patient_modal.toggle();
-                    toastr.success(data.message, "Information");
-
-                    deleteChild("23/" + referral_data.key);
-                    const index = getPositionByKey(referral_data.key);
-                    if (index > -1) {
-                        resetPaginationAndReload();
-                    }
-
-                }).catch(err => {
-                toastr.error(err, "Ooops");
-            }).finally(() => {
-                $("#btn_done").prop("disabled", false);
-                $("#btn_done").html("TAG AS DONE");
-            });
-        });
-
-        $("#btn_queue").click(function () {
-            if (!referral_data) {
-                toastr.error("No selected patient", "Error");
-                return;
-            }
-
-            const remarks = "QUEUED FROM TRIAGGE";
-
-            const params = {
-                referring_hospital: (referral_data.referring_hospital || "TRIAGGE"),
-                patient: (referral_data.patient || ""),
-                age: (referral_data.age || ""),
-                gender: (referral_data.sex || referral_data.gender || ""),
-                department: (referral_data.department || ""),
-                remarks: remarks
-            };
-
-            $(this).prop("disabled", true);
-            $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
-            fetch('{{ route('insertQueue') }}', {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                body: JSON.stringify(params)
-            })
-                .then(res => res.json())
-                .then(data => {
-                    $("#btn_queue").prop("disabled", false);
-                    $("#btn_queue").html("QUEUE PATIENT");
-                    if (data.code == 500) {
-                        toastr.error(data.message || "Unable to queue patient", "Error");
-                        return;
-                    }
-
-                    toastr.success(data.message, "Information");
-                }).catch(err => {
-                $("#btn_queue").prop("disabled", false);
-                $("#btn_queue").html("QUEUE PATIENT");
-                toastr.error(err.message || "Unable to queue patient", "Error");
-            });
-        });
-
-        $("#btn_send").click(function () {
-            $("#forward_department").val("");
-            $("#forward_remarks").val("");
-            forward_modal.show();
-        });
-
-        $("#btn_confirm_forward").click(function () {
-            $(".is-invalid").removeClass("is-invalid");
-            const remarks = $("#forward_remarks").val().trim();
-            const topic = $("#forward_department").val();
-            const department = $("#forward_department option:selected").text();
-            if (topic == "") {
-                $("#forward_department").addClass("is-invalid");
-                return;
-            }
-            if (remarks == "") {
-                $("#forward_remarks").addClass("is-invalid");
-                return;
-            }
-            const params = {
-                firebase_key: referral_data.key,
-                patient: referral_data.patient,
-                gender: referral_data.sex,
-                age: referral_data.age,
-                diagnosis: referral_data.diagnosis,
-                chief_complaint: referral_data.chiefComplaint,
-                referring_hospital: referral_data.referring_hospital,
-                department: department,
-                topic: topic,
-                remarks: remarks,
-                date_created: referral_data.date_referred
-            }
-
-            $(this).prop("disabled", true);
-            $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
-            fetch('{{ route('insertReferral') }}', {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "application/json",
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                body: JSON.stringify(params)
-            })
-                .then(res => res.json())
-                .then(data => {
-                    $("#btn_confirm_forward").prop("disabled", false);
-                    $("#btn_confirm_forward").html("Confirm Forward");
-                    if (data.code == 500) {
-                        toastr.error(data.message, "Ooops");
-                        return;
-                    }
-
-                    forward_modal.hide();
-                    patient_modal.toggle();
-                    toastr.success(data.message, "Information");
-                    insert(params.topic, params.patient, function (message) {
-                        deleteChild(params.topic);
-                    });
-
-                    deleteChild("23/" + referral_data.key);
-                    const index = getPositionByKey(referral_data.key);
-                    if (index > -1) {
-                        resetPaginationAndReload();
-                    }
-
-                }).catch(err => {
-                $("#btn_confirm_forward").prop("disabled", false);
-                $("#btn_confirm_forward").html("Confirm Forward");
-                toastr.error(err, "Ooops");
-            });
-        });
-
-        observe("23", function (snapshot) {
-            if (!is_init || !snapshot.val()) return;
-            toastr.success(snapshot.val().patient, "New referral");
-            var msg = new SpeechSynthesisUtterance();
-            msg.text = "New referral";
-            window.speechSynthesis.speak(msg);
-
-            resetPaginationAndReload();
-        });
-
-        observeRemoved("23", function () {
-            if (!is_init) return;
-            resetPaginationAndReload();
-        });
-
-        get("23", function (snapshots) {
-            is_init = true;
-            resetPaginationAndReload();
-        });
-
-    });
-
-    function viewPatient(key) {
-        referral_data = getDataByKey(key);
-        if (referral_data) {
-            $("#patient").text(referral_data.patient);
-            $("#age").text(referral_data.age + " years old");
-            $("#sex").text(referral_data.sex);
-            $("#diagnosis").text(referral_data.diagnosis);
-            $("#chief_complaint").text(referral_data.chiefComplaint);
-            patient_modal.toggle();
+    (function () {
+        let current_list = [];
+        let is_init = false;
+        let referral_data;
+        let page = 0;
+        const page_size = 10;
+        let page_cache = [];
+        let next_page_available = false;
+        function getPatientModal() {
+            const el = document.getElementById('patient_modal');
+            if (!el || !window.bootstrap || !window.bootstrap.Modal) return null;
+            return window.bootstrap.Modal.getOrCreateInstance(el);
         }
-    }
+
+        function getForwardModal() {
+            const el = document.getElementById('forward_modal');
+            if (!el || !window.bootstrap || !window.bootstrap.Modal) return null;
+            return window.bootstrap.Modal.getOrCreateInstance(el);
+        }
 
 
     function getLogs(id) {
@@ -418,4 +194,246 @@
         $("#btn_prev").toggleClass("d-none", page === 0);
         $("#btn_next").toggleClass("d-none", !next_page_available);
     }
+        window.viewPatient = function (key) {
+            referral_data = getDataByKey(key);
+            if (referral_data) {
+                $("#patient").text(referral_data.patient);
+                $("#age").text(referral_data.age + " years old");
+                $("#sex").text(referral_data.sex);
+                $("#diagnosis").text(referral_data.diagnosis);
+                $("#chief_complaint").text(referral_data.chiefComplaint);
+            const modal = getPatientModal();
+            if (modal) modal.toggle();
+        }
+        }
+
+        function bindEvents() {
+            $("#activity_container").addClass("d-none");
+            setLoadingState();
+            $("#pagination_container").removeClass("d-none");
+
+            $("#btn_search").off("click").on("click", function () {
+                page = 0;
+                renderReferrals();
+            });
+
+            $("#search_patient, #search_department").off("keydown").on("keydown", function (e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    $("#btn_search").click();
+                }
+            });
+
+            $("#btn_next").off("click").on("click", function () {
+                loadPage(page + 1);
+            });
+
+            $("#btn_prev").off("click").on("click", function () {
+                loadPage(page - 1);
+            });
+
+            $("#btn_done").off("click").on("click", function () {
+                if (!confirm("Are you sure you want to tagged this as DONE?")) return;
+
+                let remarks = prompt("Remarks:", "TAGGED AS DONE");
+                if (remarks === null) return;
+                remarks = remarks.trim();
+                if (remarks == "") {
+                    alert("Please specify remarks");
+                    return;
+                }
+
+                const params = {
+                    firebase_key: referral_data.key,
+                    patient: referral_data.patient,
+                    gender: referral_data.sex,
+                    age: referral_data.age,
+                    diagnosis: referral_data.diagnosis,
+                    chief_complaint: referral_data.chiefComplaint,
+                    referring_hospital: referral_data.referring_hospital,
+                    department: "",
+                    topic: "",
+                    remarks: remarks,
+                    date_created: referral_data.date_referred
+                }
+
+                $(this).prop("disabled", true);
+                $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
+                fetch('{{ route('tagAsDoneTriagge') }}', {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    body: JSON.stringify(params)
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.code == 500) {
+                            toastr.error(data.message, "Ooops");
+                            return;
+                        }
+
+                        const modal = getPatientModal();
+                        if (modal) modal.toggle();
+                        toastr.success(data.message, "Information");
+
+                        deleteChild("23/" + referral_data.key);
+                        const index = getPositionByKey(referral_data.key);
+                        if (index > -1) {
+                            resetPaginationAndReload();
+                        }
+
+                    }).catch(err => {
+                    toastr.error(err, "Ooops");
+                }).finally(() => {
+                    $("#btn_done").prop("disabled", false);
+                    $("#btn_done").html("TAG AS DONE");
+                });
+            });
+
+            $("#btn_queue").off("click").on("click", function () {
+                if (!referral_data) {
+                    toastr.error("No selected patient", "Error");
+                    return;
+                }
+
+                const remarks = "QUEUED FROM TRIAGGE";
+
+                const params = {
+                    referring_hospital: (referral_data.referring_hospital || "TRIAGGE"),
+                    patient: (referral_data.patient || ""),
+                    age: (referral_data.age || ""),
+                    gender: (referral_data.sex || referral_data.gender || ""),
+                    department: (referral_data.department || ""),
+                    remarks: remarks
+                };
+
+                $(this).prop("disabled", true);
+                $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
+                fetch('{{ route('insertQueue') }}', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    body: JSON.stringify(params)
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        $("#btn_queue").prop("disabled", false);
+                        $("#btn_queue").html("QUEUE PATIENT");
+                        if (data.code == 500) {
+                            toastr.error(data.message || "Unable to queue patient", "Error");
+                            return;
+                        }
+
+                        toastr.success(data.message, "Information");
+                    }).catch(err => {
+                    $("#btn_queue").prop("disabled", false);
+                    $("#btn_queue").html("QUEUE PATIENT");
+                    toastr.error(err.message || "Unable to queue patient", "Error");
+                });
+            });
+
+            $("#btn_send").off("click").on("click", function () {
+                $("#forward_department").val("");
+                $("#forward_remarks").val("");
+                const modal = getForwardModal();
+                if (modal) modal.show();
+            });
+
+            $("#btn_confirm_forward").off("click").on("click", function () {
+                $(".is-invalid").removeClass("is-invalid");
+                const remarks = $("#forward_remarks").val().trim();
+                const topic = $("#forward_department").val();
+                const department = $("#forward_department option:selected").text();
+                if (topic == "") {
+                    $("#forward_department").addClass("is-invalid");
+                    return;
+                }
+                if (remarks == "") {
+                    $("#forward_remarks").addClass("is-invalid");
+                    return;
+                }
+                const params = {
+                    firebase_key: referral_data.key,
+                    patient: referral_data.patient,
+                    gender: referral_data.sex,
+                    age: referral_data.age,
+                    diagnosis: referral_data.diagnosis,
+                    chief_complaint: referral_data.chiefComplaint,
+                    referring_hospital: referral_data.referring_hospital,
+                    department: department,
+                    topic: topic,
+                    remarks: remarks,
+                    date_created: referral_data.date_referred
+                }
+
+                $(this).prop("disabled", true);
+                $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
+                fetch('{{ route('insertReferral') }}', {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    body: JSON.stringify(params)
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        $("#btn_confirm_forward").prop("disabled", false);
+                        $("#btn_confirm_forward").html("Confirm Forward");
+                        if (data.code == 500) {
+                            toastr.error(data.message, "Ooops");
+                            return;
+                        }
+
+                        const forwardModal = getForwardModal();
+                        if (forwardModal) forwardModal.hide();
+                        const modal = getPatientModal();
+                        if (modal) modal.toggle();
+                        toastr.success(data.message, "Information");
+                        insert(params.topic, params.patient, function (message) {
+                            deleteChild(params.topic);
+                        });
+
+                        deleteChild("23/" + referral_data.key);
+                        const index = getPositionByKey(referral_data.key);
+                        if (index > -1) {
+                            resetPaginationAndReload();
+                        }
+
+                    }).catch(err => {
+                    $("#btn_confirm_forward").prop("disabled", false);
+                    $("#btn_confirm_forward").html("Confirm Forward");
+                    toastr.error(err, "Ooops");
+                });
+            });
+
+            observe("23", function (snapshot) {
+                if (!is_init || !snapshot.val()) return;
+                toastr.success(snapshot.val().patient, "New referral");
+                var msg = new SpeechSynthesisUtterance();
+                msg.text = "New referral";
+                window.speechSynthesis.speak(msg);
+
+                resetPaginationAndReload();
+            });
+
+            observeRemoved("23", function () {
+                if (!is_init) return;
+                resetPaginationAndReload();
+            });
+
+            get("23", function (snapshots) {
+                is_init = true;
+                resetPaginationAndReload();
+            });
+        }
+
+        $(document).ready(function () {
+            bindEvents();
+        });
+    })();
 </script>

@@ -24,6 +24,7 @@
                 <table class="table text-center premium-table">
                     <thead>
                     <tr>
+                        <th>Type</th>
                         <th>Referrer</th>
                         <th>Patient</th>
                         <th>Age</th>

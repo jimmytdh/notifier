@@ -14,7 +14,7 @@ class CreateQueueReferralsTable extends Migration
     public function up()
     {
         Schema::create('queue_referrals', function (Blueprint $table) {
-            $table->id();
+            $table->bigIncrements('id');
             $table->string('referring_hospital');
             $table->string('patient');
             $table->string('age')->nullable();
