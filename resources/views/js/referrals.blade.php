@@ -116,12 +116,17 @@
             $("#chief_complaint").text(chief_complaint);
             $("#diagnosis").text(diagnosis);
 
+            if (window.cleanupModals) {
+                window.cleanupModals();
+            }
             const modal = getPatientModal();
             if (modal) modal.toggle();
             getLogs(id);
         }
 
         function bindEvents() {
+            $(".track-div").removeClass("d-none");
+            $("#activity_container").removeClass("d-none");
             const userCode = $("#user_code").text().trim();
             observe(userCode, function (snapshot) {
                 if (!is_init) return;

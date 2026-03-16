@@ -110,7 +110,12 @@
             $("#sex").text(sex);
             $("#chief_complaint").text(chief_complaint);
             $("#diagnosis").text(diagnosis);
+            $(".track-div").addClass("d-none");
+            $("#activity_container").removeClass("d-none");
 
+            if (window.cleanupModals) {
+                window.cleanupModals();
+            }
             const modal = getPatientModal();
             if (modal) modal.toggle();
             getLogs(id);
@@ -118,6 +123,7 @@
 
         function bindEvents() {
             $(".track-div").addClass("d-none");
+            $("#activity_container").removeClass("d-none");
             $("#patient_modal .card-body").prop("disabled", true);
 
             $("#btn_search").off("click").on("click", function () {

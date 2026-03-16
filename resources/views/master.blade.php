@@ -36,18 +36,25 @@
     <style>
         .spa-fade-out {
             opacity: 0;
-            transform: translateY(6px);
-            transition: opacity 160ms ease, transform 160ms ease;
+            transition: opacity 160ms ease;
         }
         .spa-fade-in {
             opacity: 1;
-            transform: translateY(0);
-            transition: opacity 200ms ease, transform 200ms ease;
+            transition: opacity 200ms ease;
         }
         .spa-loading #spa-content {
             filter: blur(3px);
             opacity: 0.6;
             pointer-events: none;
+        }
+        .sidebar-nav .nav-link.active {
+            border-color: rgba(15, 118, 110, 0.35);
+            background: rgba(15, 118, 110, 0.18);
+            color: var(--pf-brand-strong);
+            box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.06);
+        }
+        .sidebar-nav .nav-link.active i {
+            color: var(--pf-brand-strong);
         }
     </style>
     <!-- =======================================================
@@ -225,10 +232,18 @@
             const links = document.querySelectorAll('#sidebar .nav-link');
             links.forEach(link => {
                 const href = link.getAttribute('href') || '';
-                if (href === urlPath) {
+                let hrefPath = href;
+                try {
+                    hrefPath = new URL(href, window.location.origin).pathname;
+                } catch (e) {
+                    hrefPath = href;
+                }
+                if (hrefPath === urlPath) {
                     link.classList.remove('collapsed');
+                    link.classList.add('active');
                 } else {
                     link.classList.add('collapsed');
+                    link.classList.remove('active');
                 }
             });
         }
@@ -250,6 +265,30 @@
             });
         }
 
+        function cleanupModals() {
+            if (window.bootstrap && window.bootstrap.Modal) {
+                document.querySelectorAll('.modal.show').forEach(el => {
+                    const instance = window.bootstrap.Modal.getInstance(el);
+                    if (instance) {
+                        instance.hide();
+                        instance.dispose();
+                    } else {
+                        el.classList.remove('show');
+                        el.style.display = 'none';
+                        el.setAttribute('aria-hidden', 'true');
+                        el.removeAttribute('aria-modal');
+                        el.removeAttribute('role');
+                    }
+                });
+            }
+
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        }
+        window.cleanupModals = cleanupModals;
+
         function swapTo(doc) {
             const newContent = doc.querySelector('#spa-content');
             if (!newContent) {
@@ -260,6 +299,8 @@
             if (window.clearFirebaseListeners) {
                 window.clearFirebaseListeners();
             }
+
+            cleanupModals();
 
             contentEl.classList.remove('spa-fade-in');
             contentEl.classList.add('spa-fade-out');
@@ -282,6 +323,7 @@
         }
 
         function fetchPage(url, pushState) {
+            cleanupModals();
             if (spinner) spinner.classList.remove('d-none');
             document.body.classList.add('spa-loading');
             fetch(url, {headers: {'X-SPA': '1'}})

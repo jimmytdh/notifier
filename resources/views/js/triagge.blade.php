@@ -202,12 +202,16 @@
                 $("#sex").text(referral_data.sex);
                 $("#diagnosis").text(referral_data.diagnosis);
                 $("#chief_complaint").text(referral_data.chiefComplaint);
-            const modal = getPatientModal();
-            if (modal) modal.toggle();
+                if (window.cleanupModals) {
+                    window.cleanupModals();
+                }
+                const modal = getPatientModal();
+                if (modal) modal.toggle();
         }
         }
 
         function bindEvents() {
+            $(".track-div").removeClass("d-none");
             $("#activity_container").addClass("d-none");
             setLoadingState();
             $("#pagination_container").removeClass("d-none");
