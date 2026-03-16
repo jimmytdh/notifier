@@ -49,6 +49,7 @@
                 is_valid = false;
             }
 
+            console.log(is_valid);
             if (!is_valid) {
                 toastr.error("Please complete the required fields.", "Validation");
                 return;
@@ -64,6 +65,9 @@
                 department: department,
                 code: code
             };
+
+            
+            
 
             $(this).prop("disabled", true);
             $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
