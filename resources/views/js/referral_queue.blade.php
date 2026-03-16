@@ -1,11 +1,12 @@
 <script>
-    let current_list = [];
-    let is_init = false;
-    let is_searching = false;
-    let referral_id;
-    let page = 0;
+    (function () {
+        let current_list = [];
+        let is_init = false;
+        let is_searching = false;
+        let referral_id;
+        let page = 0;
 
-    $(document).ready(function () {
+        function bindEvents() {
         $("#btn_add_queue").click(function () {
             $(".is-invalid").removeClass("is-invalid");
 
@@ -124,9 +125,13 @@
         });
 
         getReferrals();
-    });
+        }
 
-    function getReferrals() {
+        $(document).ready(function () {
+            bindEvents();
+        });
+
+        function getReferrals() {
         const patient = $("#search_patient").val().trim().toUpperCase();
         const department = ($(".btn-filter.btn-success").attr("data-filter")) ? $(".btn-filter.btn-success").attr("data-filter") : "";
 
@@ -183,9 +188,9 @@
             $("#referral_list").empty();
             $("#referral_list").append("<tr><td colspan='9'>" + err.message + "</td></tr>");
         });
-    }
+        }
 
-    function deleteQueue(id) {
+        window.deleteQueue = function deleteQueue(id) {
         console.log(id);
         if (confirm("Are you sure you want to delete this queue?")) {
 
@@ -205,5 +210,6 @@
                 toastr.error(err, "Ooops");
             })
         }
-    }
+        }
+    })();
 </script>
