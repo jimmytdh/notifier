@@ -27,11 +27,26 @@
         })
             .then(res => res.json())
             .then(data => {
+                if (data.referral) {
+                    const ward = (data.referral.ward || "").toString().trim();
+                    const bedNo = (data.referral.bed_no || "").toString().trim();
+                    $("#patient_modal #ward_input").val(ward || "-");
+                    $("#patient_modal #bed_no_input").val(bedNo || "-");
+                    $("#patient_modal #ward_input").prop("disabled", true);
+                    $("#patient_modal #bed_no_input").prop("disabled", true);
+                }
+                const makeBadge = function (value, tone) {
+                    if (!value) return `<span class="text-muted">-</span>`;
+                    const cls = tone || "bg-secondary";
+                    return `<span class="badge rounded-pill ${cls}">${value}</span>`;
+                };
                 data.results.forEach(it => {
                     const tr = `<tr>
                                     <td>` + it.origin + `</td>
+                                    <td>` + makeBadge(it.forwarded_by_name, "bg-success") + `</td>
                                     <td>` + it.remarks + `</td>
                                     <td>` + it.destination + `</td>
+                                    <td>` + makeBadge(it.tagged_by_name, "bg-info") + `</td>
                                     <td>` + moment(it.date_forwarded).format("MM/DD/YYYY hh:mm:ss A") + `</td>
                                </tr>`;
 
@@ -197,11 +212,16 @@
         window.viewPatient = function (key) {
             referral_data = getDataByKey(key);
             if (referral_data) {
-                $("#patient").text(referral_data.patient);
-                $("#age").text(referral_data.age + " years old");
-                $("#sex").text(referral_data.sex);
-                $("#diagnosis").text(referral_data.diagnosis);
-                $("#chief_complaint").text(referral_data.chiefComplaint);
+                const $modal = $("#patient_modal");
+                $modal.find("#patient").text(referral_data.patient);
+                $modal.find("#age").text(referral_data.age + " years old");
+                $modal.find("#sex").text(referral_data.sex);
+                $modal.find("#ward_input").val("-");
+                $modal.find("#bed_no_input").val("-");
+                $modal.find("#ward_input").prop("disabled", true);
+                $modal.find("#bed_no_input").prop("disabled", true);
+                $modal.find("#diagnosis").text(referral_data.diagnosis);
+                $modal.find("#chief_complaint").text(referral_data.chiefComplaint);
                 if (window.hoistModals) {
                     window.hoistModals();
                 }

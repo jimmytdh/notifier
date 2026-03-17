@@ -13,6 +13,9 @@ class CreateQueueReferralsTable extends Migration
      */
     public function up()
     {
+        if (Schema::hasTable('queue_referrals')) {
+            return;
+        }
         Schema::create('queue_referrals', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('referring_hospital');

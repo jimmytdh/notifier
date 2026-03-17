@@ -82,11 +82,26 @@
             })
                 .then(res => res.json())
                 .then(data => {
+                    if (data.referral) {
+                        const ward = (data.referral.ward || "").toString().trim();
+                        const bedNo = (data.referral.bed_no || "").toString().trim();
+                        $("#patient_modal #ward_input").val(ward || "-");
+                        $("#patient_modal #bed_no_input").val(bedNo || "-");
+                        $("#patient_modal #ward_input").prop("disabled", true);
+                        $("#patient_modal #bed_no_input").prop("disabled", true);
+                    }
+                    const makeBadge = function (value, tone) {
+                        if (!value) return `<span class="text-muted">-</span>`;
+                        const cls = tone || "bg-secondary";
+                        return `<span class="badge rounded-pill ${cls}">${value}</span>`;
+                    };
                     data.results.forEach(it => {
                         const tr = `<tr>
                                         <td>` + it.origin + `</td>
+                                        <td>` + makeBadge(it.forwarded_by_name, "bg-success") + `</td>
                                         <td>` + it.remarks + `</td>
                                         <td>` + it.destination + `</td>
+                                        <td>` + makeBadge(it.tagged_by_name, "bg-info") + `</td>
                                         <td>` + moment(it.date_forwarded).format("MM/DD/YYYY hh:mm:ss A") + `</td>
                                    </tr>`;
 
@@ -105,11 +120,16 @@
             const chief_complaint = $("#referral_id_" + id + " td:eq(5)").text();
             const diagnosis = $("#referral_id_" + id + " td:eq(6)").text();
 
-            $("#patient").text(patient);
-            $("#age").text(age + " years old");
-            $("#sex").text(sex);
-            $("#chief_complaint").text(chief_complaint);
-            $("#diagnosis").text(diagnosis);
+            const $modal = $("#patient_modal");
+            $modal.find("#patient").text(patient);
+            $modal.find("#age").text(age + " years old");
+            $modal.find("#sex").text(sex);
+            $modal.find("#ward_input").val("-");
+            $modal.find("#bed_no_input").val("-");
+            $modal.find("#ward_input").prop("disabled", true);
+            $modal.find("#bed_no_input").prop("disabled", true);
+            $modal.find("#chief_complaint").text(chief_complaint);
+            $modal.find("#diagnosis").text(diagnosis);
             $(".track-div").addClass("d-none");
             $("#activity_container").removeClass("d-none");
 

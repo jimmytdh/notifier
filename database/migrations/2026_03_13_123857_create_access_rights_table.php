@@ -13,6 +13,9 @@ class CreateAccessRightsTable extends Migration
      */
     public function up()
     {
+        if (Schema::hasTable('access_rights')) {
+            return;
+        }
         Schema::create('access_rights', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->integer('userid');

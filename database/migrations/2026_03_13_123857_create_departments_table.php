@@ -13,6 +13,9 @@ class CreateDepartmentsTable extends Migration
      */
     public function up()
     {
+        if (Schema::hasTable('departments')) {
+            return;
+        }
         Schema::create('departments', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('department')->unique();

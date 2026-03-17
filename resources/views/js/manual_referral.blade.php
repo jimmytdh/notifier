@@ -5,6 +5,8 @@
             $("#patient_name").val("");
             $("#patient_age").val("");
             $("#patient_gender").val("");
+            $("#patient_ward").val("");
+            $("#patient_bed_no").val("");
             $("#chief_complaint").val("");
             $("#diagnosis").val("");
             $("#remarks").val("");
@@ -27,6 +29,8 @@
                 const patient = $("#patient_name").val().trim();
                 const age = $("#patient_age").val().trim();
                 const gender = $("#patient_gender").val().trim();
+                const ward = $("#patient_ward").val().trim();
+                const bed_no = $("#patient_bed_no").val().trim();
                 const chief_complaint = $("#chief_complaint").val().trim();
                 const diagnosis = $("#diagnosis").val().trim();
                 const remarks = $("#remarks").val().trim();
@@ -64,6 +68,8 @@
                     patient: patient,
                     age: age,
                     gender: gender,
+                    ward: ward,
+                    bed_no: bed_no,
                     chief_complaint: chief_complaint,
                     diagnosis: diagnosis,
                     remarks: remarks,

@@ -21,6 +21,14 @@
                             <label>Age</label>
                             <p id="age"></p>
                         </div>
+                        <div class="fact-item">
+                            <label>Ward</label>
+                            <input type="text" class="form-control form-control-sm" id="ward_input" placeholder="-">
+                        </div>
+                        <div class="fact-item">
+                            <label>Bed No.</label>
+                            <input type="text" class="form-control form-control-sm" id="bed_no_input" placeholder="-">
+                        </div>
                     </div>
                 </div>
 
@@ -51,8 +59,10 @@
                             <thead>
                             <tr>
                                 <th>Origin</th>
+                                <th>Forwarded By</th>
                                 <th>Remarks</th>
                                 <th>Destination</th>
+                                <th>Tagged By</th>
                                 <th>Date Forwarded</th>
                             </tr>
                             </thead>

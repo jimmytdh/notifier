@@ -28,7 +28,7 @@
         function getReferrals() {
             const patient = (String($("#search_patient").val() || "")).trim().toUpperCase();
             $("#referral_list").empty();
-            $("#referral_list").append("<tr><td colspan='9'>Loading data, please wait ...</td></tr>");
+            $("#referral_list").append("<tr><td colspan='10'>Loading data, please wait ...</td></tr>");
             fetch('{{ route('getReferrals') }}?search_patient=' + patient +
                 "&page=" + page, {
                 method: "GET"
@@ -39,7 +39,7 @@
                     $("#referral_list").empty();
                     $("#btn_next").addClass("d-none");
                     if (data.results.length < 1) {
-                        $("#referral_list").append("<tr><td colspan='9'>No record found</td></tr>");
+                        $("#referral_list").append("<tr><td colspan='10'>No record found</td></tr>");
                         return;
                     }
 
@@ -54,12 +54,18 @@
                     $("#page_items_count").text(((page * 10) + 1) + " - " + ((page * 10) + max_visible));
                     for (let i = 0; i < max_visible; i++) {
                         const it = data.results[i];
+                        const ward = it.ward || "";
+                        const bedNo = it.bed_no || "";
+                        const wardDisplay = ward || "-";
+                        const bedDisplay = bedNo || "-";
                         const tr = `<tr id="referral_id_` + it.id + `">
                                         <td>` + getTypeBadge(it.type) + `</td>
                                         <td>` + it.referring_hospital + `</td>
                                         <td>` + it.patient + `</td>
                                         <td>` + it.age + `</td>
                                         <td>` + it.gender + `</td>
+                                        <td>` + wardDisplay + `</td>
+                                        <td>` + bedDisplay + `</td>
                                         <td class="d-none" style="max-width: 100px;text-overflow:ellipsis;white-space: nowrap;overflow: hidden">` + it.chief_complaint + `</td>
                                         <td class="d-none">` + it.diagnosis + `</td>
                                         <td>` + it.department + `</td>
@@ -87,11 +93,24 @@
             })
                 .then(res => res.json())
                 .then(data => {
+                    if (data.referral) {
+                        const ward = (data.referral.ward || "").toString().trim();
+                        const bedNo = (data.referral.bed_no || "").toString().trim();
+                        $("#patient_modal #ward_input").val(ward);
+                        $("#patient_modal #bed_no_input").val(bedNo);
+                    }
+                    const makeBadge = function (value, tone) {
+                        if (!value) return `<span class="text-muted">-</span>`;
+                        const cls = tone || "bg-secondary";
+                        return `<span class="badge rounded-pill ${cls}">${value}</span>`;
+                    };
                     data.results.forEach(it => {
                         const tr = `<tr>
                                         <td>` + it.origin + `</td>
+                                        <td>` + makeBadge(it.forwarded_by_name, "bg-success") + `</td>
                                         <td>` + it.remarks + `</td>
                                         <td>` + it.destination + `</td>
+                                        <td>` + makeBadge(it.tagged_by_name, "bg-info") + `</td>
                                         <td>` + moment(it.date_forwarded).format("MM/DD/YYYY hh:mm:ss A") + `</td>
                                    </tr>`;
 
@@ -104,17 +123,24 @@
 
         window.viewPatient = function (id) {
             referral_id = id;
+            const $modal = $("#patient_modal");
             const patient = $("#referral_id_" + id + " td:eq(2)").text();
             const age = $("#referral_id_" + id + " td:eq(3)").text();
             const sex = $("#referral_id_" + id + " td:eq(4)").text();
-            const chief_complaint = $("#referral_id_" + id + " td:eq(6)").text();
-            const diagnosis = $("#referral_id_" + id + " td:eq(7)").text();
+            const ward = $("#referral_id_" + id + " td:eq(5)").text().trim();
+            const bedNo = $("#referral_id_" + id + " td:eq(6)").text().trim();
+            const chief_complaint = $("#referral_id_" + id + " td:eq(7)").text();
+            const diagnosis = $("#referral_id_" + id + " td:eq(8)").text();
 
-            $("#patient").text(patient);
-            $("#age").text(age + " years old");
-            $("#sex").text(sex);
-            $("#chief_complaint").text(chief_complaint);
-            $("#diagnosis").text(diagnosis);
+            $modal.find("#patient").text(patient);
+            $modal.find("#age").text(age + " years old");
+            $modal.find("#sex").text(sex);
+            $modal.find("#ward_input").val(ward === "-" ? "" : ward);
+            $modal.find("#bed_no_input").val(bedNo === "-" ? "" : bedNo);
+            $modal.find("#ward_input").prop("disabled", false);
+            $modal.find("#bed_no_input").prop("disabled", false);
+            $modal.find("#chief_complaint").text(chief_complaint);
+            $modal.find("#diagnosis").text(diagnosis);
 
             if (window.hoistModals) {
                 window.hoistModals();
@@ -178,6 +204,8 @@
                 if (remarks === null) return;
                 remarks = remarks.trim();
                 if (remarks === "") remarks = "TAGGED AS DONE";
+                const ward = $("#patient_modal #ward_input").val().trim();
+                const bedNo = $("#patient_modal #bed_no_input").val().trim();
 
                 if (confirm("Are you sure you want to tag this as done?")) {
                     $(this).prop("disabled", true);
@@ -188,7 +216,7 @@
                             "Content-Type": "application/json",
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },
-                        body: JSON.stringify({id: referral_id, remarks: remarks})
+                        body: JSON.stringify({id: referral_id, remarks: remarks, ward: ward, bed_no: bedNo})
                     })
                         .then(res => res.json())
                         .then(data => {
@@ -199,6 +227,11 @@
                                 return;
                             }
 
+                    const row = $("#referral_id_" + referral_id);
+                    if (row.length) {
+                        row.find("td:eq(5)").text(ward || "-");
+                        row.find("td:eq(6)").text(bedNo || "-");
+                    }
                     const modal = getPatientModal();
                     if (modal) modal.toggle();
                     toastr.success(data.message, "Information");
@@ -219,7 +252,7 @@
                 const patient = $("#referral_id_" + referral_id + " td:eq(2)").text().trim();
                 const age = $("#referral_id_" + referral_id + " td:eq(3)").text().trim();
                 const gender = $("#referral_id_" + referral_id + " td:eq(4)").text().trim();
-                const department = $("#referral_id_" + referral_id + " td:eq(8)").text().trim();
+                const department = $("#referral_id_" + referral_id + " td:eq(9)").text().trim();
                 const remarks = "QUEUED FROM " + $("#user_department").text().trim();
 
                 const params = {
@@ -267,10 +300,12 @@
 
             $("#btn_confirm_forward").off("click").on("click", function () {
                 $(".is-invalid").removeClass("is-invalid");
-                const referring_hospital = $("#referral_id_" + referral_id + " td:eq(0)").text();
-                const patient = $("#referral_id_" + referral_id + " td:eq(1)").text();
-                const age = $("#referral_id_" + referral_id + " td:eq(2)").text();
-                const gender = $("#referral_id_" + referral_id + " td:eq(3)").text();
+                const referring_hospital = $("#referral_id_" + referral_id + " td:eq(1)").text();
+                const patient = $("#referral_id_" + referral_id + " td:eq(2)").text();
+                const age = $("#referral_id_" + referral_id + " td:eq(3)").text();
+                const gender = $("#referral_id_" + referral_id + " td:eq(4)").text();
+                const ward = $("#patient_modal #ward_input").val().trim();
+                const bedNo = $("#patient_modal #bed_no_input").val().trim();
                 const remarks = $("#forward_remarks").val().trim();
                 const topic = $("#forward_department").val();
                 const department = $("#forward_department option:selected").text();
@@ -294,6 +329,8 @@
                     referring_hospital: referring_hospital,
                     department: department,
                     topic: topic,
+                    ward: ward,
+                    bed_no: bedNo,
                     remarks: remarks
                 }
 
@@ -317,6 +354,11 @@
                             return;
                         }
 
+                        const row = $("#referral_id_" + referral_id);
+                        if (row.length) {
+                            row.find("td:eq(5)").text(ward || "-");
+                            row.find("td:eq(6)").text(bedNo || "-");
+                        }
                         const forwardModal = getForwardModal();
                         if (forwardModal) forwardModal.hide();
                         const modal = getPatientModal();

@@ -192,6 +192,7 @@ class MyScheduledTask extends Command
                 $query->where('r.status', '!=', 'DONE')
                     ->orWhereNull('r.status');
             })
+            ->where('r.type', '=', 'Referral')
             ->whereNotNull('l.date_forwarded') // Ensure date_forwarded exists
             ->select(
                 'r.id',

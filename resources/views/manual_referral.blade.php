@@ -37,6 +37,14 @@
                         </select>
                     </div>
                     <div class="col-md-6">
+                        <label class="form-label fw-semibold">Ward</label>
+                        <input type="text" class="form-control" id="patient_ward" placeholder="Ward (optional)">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Bed No.</label>
+                        <input type="text" class="form-control" id="patient_bed_no" placeholder="Bed number (optional)">
+                    </div>
+                    <div class="col-md-6">
                         <label class="form-label fw-semibold">Chief Complaint</label>
                         <textarea class="form-control" id="chief_complaint" rows="3" placeholder="Primary complaint"></textarea>
                     </div>

@@ -13,6 +13,9 @@ class CreateLogsTable extends Migration
      */
     public function up()
     {
+        if (Schema::hasTable('logs')) {
+            return;
+        }
         Schema::create('logs', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('referral_id')->index('logs_referral_id_foreign');

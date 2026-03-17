@@ -13,6 +13,9 @@ class AddTypeToReferralsTable extends Migration
      */
     public function up()
     {
+        if (!Schema::hasTable('referrals') || Schema::hasColumn('referrals', 'type')) {
+            return;
+        }
         Schema::table('referrals', function (Blueprint $table) {
             $table->enum('type', ['Referral', 'Manual'])->default('Referral')->after('referring_hospital');
         });
@@ -25,6 +28,9 @@ class AddTypeToReferralsTable extends Migration
      */
     public function down()
     {
+        if (!Schema::hasTable('referrals') || !Schema::hasColumn('referrals', 'type')) {
+            return;
+        }
         Schema::table('referrals', function (Blueprint $table) {
             $table->dropColumn('type');
         });

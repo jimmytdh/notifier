@@ -13,6 +13,9 @@ class CreateReferralsTable extends Migration
      */
     public function up()
     {
+        if (Schema::hasTable('referrals')) {
+            return;
+        }
         Schema::create('referrals', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->integer('userid');

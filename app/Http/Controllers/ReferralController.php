@@ -255,8 +255,38 @@ class ReferralController extends Controller
             return ['code' => 401, 'message' => 'Referral not found'];
         }
 
-        $columns = ['origin', 'destination', 'remarks', 'date_tagged', 'date_forwarded'];
-        return ['code' => 200, 'results' => Log::where('referral_id', '=', $referral->id)->get($columns)];
+        $columns = ['origin', 'destination', 'remarks', 'date_tagged', 'date_forwarded', 'forwarded_by', 'tagged_by'];
+        $logs = Log::where('referral_id', '=', $referral->id)->get($columns);
+        $userIds = $logs->pluck('forwarded_by')
+            ->merge($logs->pluck('tagged_by'))
+            ->filter(function ($id) {
+                return !is_null($id) && (int)$id > 0;
+            })
+            ->unique()
+            ->values();
+
+        $usersById = User::whereIn('id', $userIds)->get(['id', 'fname', 'lname', 'name'])->keyBy('id');
+
+        $logs = $logs->map(function ($log) use ($usersById) {
+            $forwardId = (int) ($log->forwarded_by ?? 0);
+            $taggedId = (int) ($log->tagged_by ?? 0);
+            $log->forwarded_by_name = $forwardId > 0 && $usersById->has($forwardId)
+                ? trim(($usersById[$forwardId]->fname ?? '') . ' ' . ($usersById[$forwardId]->lname ?? '')) ?: ($usersById[$forwardId]->name ?? null)
+                : ($forwardId === 0 ? 'System' : null);
+            $log->tagged_by_name = $taggedId > 0 && $usersById->has($taggedId)
+                ? trim(($usersById[$taggedId]->fname ?? '') . ' ' . ($usersById[$taggedId]->lname ?? '')) ?: ($usersById[$taggedId]->name ?? null)
+                : null;
+            return $log;
+        });
+
+        return [
+            'code' => 200,
+            'referral' => [
+                'ward' => $referral->ward,
+                'bed_no' => $referral->bed_no
+            ],
+            'results' => $logs
+        ];
     }
 
     public function insert_error($id, $message)
@@ -331,7 +361,9 @@ class ReferralController extends Controller
                 'code' => 'required|string|max:20',
                 'remarks' => 'required|string|max:500',
                 'diagnosis' => 'nullable|string',
-                'chief_complaint' => 'nullable|string'
+                'chief_complaint' => 'nullable|string',
+                'ward' => 'nullable|string|max:255',
+                'bed_no' => 'nullable|string|max:255'
             ]);
 
             $referral = new Referral;
@@ -342,6 +374,8 @@ class ReferralController extends Controller
             $referral->age = (int) $request->age;
             $referral->diagnosis = $request->diagnosis;
             $referral->chief_complaint = $request->chief_complaint;
+            $referral->ward = $request->ward;
+            $referral->bed_no = $request->bed_no;
             $referral->department = $request->department;
             $referral->referring_hospital = session('access_rights');
             $referral->date_created = Carbon::now();
@@ -391,6 +425,10 @@ class ReferralController extends Controller
             $logs->remarks = $request->remarks;
             $logs->save();
 
+            $ward = trim((string) $request->ward);
+            $bedNo = trim((string) $request->bed_no);
+            $referral->ward = $ward !== '' ? $ward : null;
+            $referral->bed_no = $bedNo !== '' ? $bedNo : null;
             $referral->department = $request->department;
             $referral->save();
 
@@ -417,12 +455,17 @@ class ReferralController extends Controller
             $logs = new Log;
             $logs->referral_id = $request->id;
             $logs->forwarded_by = Auth::id();
+            $logs->tagged_by = Auth::id();
             $logs->origin = $referral->department;
             $logs->destination = 'CYCLE END';
             $logs->remarks = $request->remarks;
             $logs->date_forwarded = Carbon::now();
             $logs->save();
 
+            $ward = trim((string) $request->ward);
+            $bedNo = trim((string) $request->bed_no);
+            $referral->ward = $ward !== '' ? $ward : null;
+            $referral->bed_no = $bedNo !== '' ? $bedNo : null;
             $referral->status = "DONE";
             $referral->save();
 
@@ -529,9 +572,38 @@ class ReferralController extends Controller
             return ['code' => 401, 'message' => 'Referral not found'];
         }
 
-        $columns = ['origin', 'destination', 'remarks', 'date_tagged', 'date_forwarded'];
+        $columns = ['origin', 'destination', 'remarks', 'date_tagged', 'date_forwarded', 'forwarded_by', 'tagged_by'];
         $logs = Log::where('referral_id', '=', $referral->id)->get($columns);
-        return response(['code' => 200, 'results' => $logs]);
+        $userIds = $logs->pluck('forwarded_by')
+            ->merge($logs->pluck('tagged_by'))
+            ->filter(function ($id) {
+                return !is_null($id) && (int)$id > 0;
+            })
+            ->unique()
+            ->values();
+
+        $usersById = User::whereIn('id', $userIds)->get(['id', 'fname', 'lname'])->keyBy('id');
+
+        $logs = $logs->map(function ($log) use ($usersById) {
+            $forwardId = (int) ($log->forwarded_by ?? 0);
+            $taggedId = (int) ($log->tagged_by ?? 0);
+            $log->forwarded_by_name = $forwardId > 0 && $usersById->has($forwardId)
+                ? trim(($usersById[$forwardId]->fname ?? '') . ' ' . ($usersById[$forwardId]->lname ?? '')) ?: ($usersById[$forwardId]->name ?? null)
+                : ($forwardId === 0 ? 'System' : null);
+            $log->tagged_by_name = $taggedId > 0 && $usersById->has($taggedId)
+                ? trim(($usersById[$taggedId]->fname ?? '') . ' ' . ($usersById[$taggedId]->lname ?? '')) ?: ($usersById[$taggedId]->name ?? null)
+                : null;
+            return $log;
+        });
+
+        return response([
+            'code' => 200,
+            'referral' => [
+                'ward' => $referral->ward,
+                'bed_no' => $referral->bed_no
+            ],
+            'results' => $logs
+        ]);
     }
 
 

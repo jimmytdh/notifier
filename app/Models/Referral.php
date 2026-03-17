@@ -19,6 +19,8 @@ class Referral extends Model
         'age',
         'diagnosis',
         'chief_complaint',
+        'ward',
+        'bed_no',
         'department'
     ];
 

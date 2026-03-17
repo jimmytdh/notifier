@@ -29,6 +29,8 @@
                         <th>Patient</th>
                         <th>Age</th>
                         <th>Gender</th>
+                        <th>Ward</th>
+                        <th>Bed No.</th>
                         <th>Department</th>
                         <th>Date Referred</th>
                         <th style="width: 4%"></th>
