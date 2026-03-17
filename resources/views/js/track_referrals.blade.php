@@ -147,6 +147,8 @@
         function bindEvents() {
             $(".track-div").addClass("d-none");
             $("#activity_container").removeClass("d-none");
+            page = 0;
+            $("#search_patient").val("");
             $("#patient_modal .card-body").prop("disabled", true);
 
             $("#spa-content").off("click", "#btn_search").on("click", "#btn_search", function () {

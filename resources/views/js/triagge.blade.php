@@ -238,6 +238,9 @@
             $("#activity_container").addClass("d-none");
             setLoadingState();
             $("#pagination_container").removeClass("d-none");
+            page = 0;
+            $("#search_patient").val("");
+            $("#search_department").val("");
 
             $("#spa-content").off("click", "#btn_search").on("click", "#btn_search", function () {
                 page = 0;

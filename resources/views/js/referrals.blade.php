@@ -156,6 +156,8 @@
         function bindEvents() {
             $(".track-div").removeClass("d-none");
             $("#activity_container").removeClass("d-none");
+            page = 0;
+            $("#search_patient").val("");
             const userCode = $("#user_code").text().trim();
             observe(userCode, function (snapshot) {
                 if (!is_init) return;
