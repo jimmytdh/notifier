@@ -145,6 +145,7 @@ class MyScheduledTask extends Command
                 $query->where('r.status', '!=', 'DONE')
                     ->orWhereNull('r.status');
             })
+            ->where('r.type', '=', 'Manual')
             ->whereRaw('TIMESTAMPDIFF(MINUTE, l.date_forwarded, ?) >= 15', [Carbon::now()])
             ->select(
                 'r.department',

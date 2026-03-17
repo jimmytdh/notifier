@@ -86,6 +86,8 @@
             });
         }
 
+        window.refreshReferrals = getReferrals;
+
         function getLogs(id) {
             $("#activity_logs").empty();
             fetch('{{ route('loadLogs') }}?id=' + id, {

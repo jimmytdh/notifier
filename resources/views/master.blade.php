@@ -62,6 +62,11 @@
         .modal-backdrop {
             z-index: 1990;
         }
+        .speaker-modal-body p {
+            color: #4b5563;
+            font-size: 14px;
+            margin-bottom: 0;
+        }
     </style>
     <!-- =======================================================
     * Template Name: NiceAdmin - v2.5.0
@@ -100,6 +105,17 @@
 
 </main>
 <!-- End #main -->
+<div class="modal fade" id="speaker_permission_modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body speaker-modal-body">
+                <h5 class="mb-2">Enable Sound Alerts</h5>
+                <p class="mb-3">Sound alerts are required for incoming referrals. Please enable the speaker to continue.</p>
+                <button class="btn btn-success w-100" id="btn_enable_speaker">Enable Speaker</button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- ======= Footer ======= -->
 <footer id="footer" class="footer">
     <div class="copyright">
@@ -224,6 +240,76 @@
         const titleEl = document.getElementById('page-title');
         const subtitleEl = document.getElementById('page-subtitle');
         const spinner = document.getElementById('spinner');
+        const speakerModalEl = document.getElementById('speaker_permission_modal');
+        const speakerButton = document.getElementById('btn_enable_speaker');
+        let speakerModalInstance = null;
+
+        function canSpeak() {
+            return !!(window.responsiveVoice || window.speechSynthesis);
+        }
+
+        function isSpeakerEnabled() {
+            return localStorage.getItem('speaker_enabled') === '1';
+        }
+
+        function setSpeakerEnabled(enabled) {
+            localStorage.setItem('speaker_enabled', enabled ? '1' : '0');
+        }
+
+        function speak(text) {
+            if (window.responsiveVoice) {
+                window.responsiveVoice.speak(text);
+                return;
+            }
+            if (window.speechSynthesis) {
+                const msg = new SpeechSynthesisUtterance(text);
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function syncSpeakerModal() {
+            if (!speakerModalEl) return;
+            if (!speakerModalInstance && window.bootstrap && window.bootstrap.Modal) {
+                speakerModalInstance = new bootstrap.Modal(speakerModalEl);
+            }
+            if (!canSpeak()) return;
+            if (isSpeakerEnabled()) {
+                if (speakerModalInstance) speakerModalInstance.hide();
+            } else {
+                if (speakerModalInstance) speakerModalInstance.show();
+            }
+        }
+
+        if (speakerButton) {
+            speakerButton.addEventListener('click', function () {
+                setSpeakerEnabled(true);
+                speak('Sound alerts enabled');
+                syncSpeakerModal();
+            });
+        }
+
+        function initGlobalReferralNotifications() {
+            if (!window.observe || !window.get) return;
+            const department = (document.getElementById('user_department')?.textContent || '').trim();
+            const userCode = (document.getElementById('user_code')?.textContent || '').trim();
+            const topic = department === 'TRIAGGE' ? '23' : userCode;
+            if (!topic) return;
+
+            let isInit = false;
+            observe(topic, function (snapshot) {
+                if (!isInit || !snapshot || !snapshot.val()) return;
+                toastr.success('New incoming referral', 'New Referral');
+                if (isSpeakerEnabled()) {
+                    speak('New incoming referral');
+                }
+                if (typeof window.refreshReferrals === 'function') {
+                    window.refreshReferrals();
+                }
+            });
+            get(topic, function () {
+                isInit = true;
+            });
+        }
 
         function isSameOrigin(url) {
             try {
@@ -340,6 +426,8 @@
             runPageScripts(doc);
             const path = urlPath || window.location.pathname;
             setActiveNav(path);
+            syncSpeakerModal();
+            initGlobalReferralNotifications();
         }
 
         function fetchPage(url, pushState) {
@@ -374,6 +462,8 @@
         }
 
         hoistModals();
+        syncSpeakerModal();
+        initGlobalReferralNotifications();
 
         document.addEventListener('click', function (e) {
             const link = e.target.closest('a');
