@@ -302,7 +302,8 @@
                 if (isSpeakerEnabled()) {
                     speak('New incoming referral');
                 }
-                if (typeof window.refreshReferrals === 'function') {
+                const isReferralsPage = window.location.pathname === '/referrals';
+                if (isReferralsPage && typeof window.refreshReferrals === 'function') {
                     window.refreshReferrals();
                 }
             });
