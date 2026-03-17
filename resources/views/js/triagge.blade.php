@@ -239,23 +239,23 @@
             setLoadingState();
             $("#pagination_container").removeClass("d-none");
 
-            $("#btn_search").off("click").on("click", function () {
+            $("#spa-content").off("click", "#btn_search").on("click", "#btn_search", function () {
                 page = 0;
                 renderReferrals();
             });
 
-            $("#search_patient, #search_department").off("keydown").on("keydown", function (e) {
+            $("#spa-content").off("keydown", "#search_patient, #search_department").on("keydown", "#search_patient, #search_department", function (e) {
                 if (e.key === "Enter") {
                     e.preventDefault();
                     $("#btn_search").click();
                 }
             });
 
-            $("#btn_next").off("click").on("click", function () {
+            $("#spa-content").off("click", "#btn_next").on("click", "#btn_next", function () {
                 loadPage(page + 1);
             });
 
-            $("#btn_prev").off("click").on("click", function () {
+            $("#spa-content").off("click", "#btn_prev").on("click", "#btn_prev", function () {
                 loadPage(page - 1);
             });
 

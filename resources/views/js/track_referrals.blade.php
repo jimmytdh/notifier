@@ -149,25 +149,25 @@
             $("#activity_container").removeClass("d-none");
             $("#patient_modal .card-body").prop("disabled", true);
 
-            $("#btn_search").off("click").on("click", function () {
+            $("#spa-content").off("click", "#btn_search").on("click", "#btn_search", function () {
                 page = 0;
                 getReferrals();
             });
 
-            $("#search_patient").off("keydown").on("keydown", function (e) {
+            $("#spa-content").off("keydown", "#search_patient").on("keydown", "#search_patient", function (e) {
                 if (e.key === "Enter") {
                     e.preventDefault();
                     $("#btn_search").click();
                 }
             });
 
-            $("#btn_next").off("click").on("click", function () {
+            $("#spa-content").off("click", "#btn_next").on("click", "#btn_next", function () {
                 page++;
                 getReferrals();
                 $("#btn_prev").removeClass("d-none");
             });
 
-            $("#btn_prev").off("click").on("click", function () {
+            $("#spa-content").off("click", "#btn_prev").on("click", "#btn_prev", function () {
                 if (page == 0) return;
                 if (page == 1) {
                     $("#btn_prev").addClass("d-none");
