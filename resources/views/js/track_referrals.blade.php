@@ -113,11 +113,14 @@
             $(".track-div").addClass("d-none");
             $("#activity_container").removeClass("d-none");
 
+            if (window.hoistModals) {
+                window.hoistModals();
+            }
             if (window.cleanupModals) {
                 window.cleanupModals();
             }
             const modal = getPatientModal();
-            if (modal) modal.toggle();
+            if (modal) modal.show();
             getLogs(id);
         }
 

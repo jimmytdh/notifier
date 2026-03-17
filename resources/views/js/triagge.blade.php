@@ -202,11 +202,14 @@
                 $("#sex").text(referral_data.sex);
                 $("#diagnosis").text(referral_data.diagnosis);
                 $("#chief_complaint").text(referral_data.chiefComplaint);
+                if (window.hoistModals) {
+                    window.hoistModals();
+                }
                 if (window.cleanupModals) {
                     window.cleanupModals();
                 }
                 const modal = getPatientModal();
-                if (modal) modal.toggle();
+                if (modal) modal.show();
         }
         }
 

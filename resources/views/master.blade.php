@@ -56,6 +56,12 @@
         .sidebar-nav .nav-link.active i {
             color: var(--pf-brand-strong);
         }
+        .modal {
+            z-index: 2000;
+        }
+        .modal-backdrop {
+            z-index: 1990;
+        }
     </style>
     <!-- =======================================================
     * Template Name: NiceAdmin - v2.5.0
@@ -289,7 +295,19 @@
         }
         window.cleanupModals = cleanupModals;
 
-        function swapTo(doc) {
+        function hoistModals() {
+            const modals = document.querySelectorAll('#spa-content .modal');
+            modals.forEach(modal => {
+                const existing = document.body.querySelector(`#${modal.id}`);
+                if (existing && existing !== modal) {
+                    existing.remove();
+                }
+                document.body.appendChild(modal);
+            });
+        }
+        window.hoistModals = hoistModals;
+
+        function swapTo(doc, urlPath) {
             const newContent = doc.querySelector('#spa-content');
             if (!newContent) {
                 window.location.reload();
@@ -308,6 +326,7 @@
                 contentEl.innerHTML = newContent.innerHTML;
                 contentEl.classList.remove('spa-fade-out');
                 contentEl.classList.add('spa-fade-in');
+                hoistModals();
             }, 120);
 
             const newTitle = doc.title || '';
@@ -319,7 +338,8 @@
             if (incomingSubtitle) subtitleEl.textContent = incomingSubtitle.textContent;
 
             runPageScripts(doc);
-            setActiveNav(window.location.pathname);
+            const path = urlPath || window.location.pathname;
+            setActiveNav(path);
         }
 
         function fetchPage(url, pushState) {
@@ -331,7 +351,8 @@
                 .then(html => {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
-                    swapTo(doc);
+                    const urlPath = new URL(url, window.location.origin).pathname;
+                    swapTo(doc, urlPath);
                     if (pushState) {
                         history.pushState({}, '', url);
                     }
@@ -351,6 +372,8 @@
             if (link.getAttribute('href').startsWith('#')) return false;
             return true;
         }
+
+        hoistModals();
 
         document.addEventListener('click', function (e) {
             const link = e.target.closest('a');
