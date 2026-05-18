@@ -407,7 +407,7 @@ class ReferralController extends Controller
                 return ['code' => 401, 'message' => 'Referral not found'];
             }
 
-            if (session('access_rights') != $referral->department) {
+            if (session('code') !== 'TRIAGGE' && session('access_rights') != $referral->department) {
                 return ['code' => 500, 'message' => 'Cannot forward, referral no longer belongs to your department'];
             }
 
@@ -420,7 +420,7 @@ class ReferralController extends Controller
             $logs = new Log;
             $logs->referral_id = $referral->id;
             $logs->forwarded_by = Auth::id();
-            $logs->origin = session('access_rights');
+            $logs->origin = $referral->department;
             $logs->destination = $request->department;
             $logs->remarks = $request->remarks;
             $logs->save();
@@ -535,6 +535,25 @@ class ReferralController extends Controller
                     if ($patient != "") {
                         $query->where("patient", "LIKE", "%" . $patient . "%");
                     }
+                })
+                ->orderBy('date_created', 'DESC')
+                ->skip($request->page * 10)
+                ->take(11)
+                ->get();
+            return response(['code' => 200, 'results' => $referrals]);
+        } catch (\Exception $exception) {
+            return response(['code' => 500, 'message' => $exception->getMessage()]);
+        }
+    }
+
+    public function getReturnedReferrals(Request $request)
+    {
+        try {
+            $patient = $request->search_patient ?? '';
+            $referrals = Referral::where('department', 'EMED')
+                ->whereNull('status')
+                ->when($patient !== '', function ($query) use ($patient) {
+                    $query->where('patient', 'LIKE', '%' . $patient . '%');
                 })
                 ->orderBy('date_created', 'DESC')
                 ->skip($request->page * 10)

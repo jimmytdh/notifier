@@ -16,6 +16,12 @@
                 </a>
             </li>
             @endif
+            <li class="nav-item">
+                <a class="nav-link {{ $routeName == 'returned_referrals' ? 'active' : 'collapsed' }}" href="{{ route('returned_referrals') }}">
+                    <i class="bi bi-arrow-return-left"></i>
+                    <span>Returned Referrals</span>
+                </a>
+            </li>
         @else
             <li class="nav-item">
                 <a class="nav-link {{ $routeName == 'referrals' ? 'active' : 'collapsed' }}" href="{{ route('referrals') }}">

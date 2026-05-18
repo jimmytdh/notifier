@@ -69,9 +69,15 @@ Route::middleware('auth')->group(function () {
         return view('all_referrals');
     })->name('all_referrals');
 
+    Route::get('/returned_referrals', function () {
+        if (session('code') !== 'TRIAGGE') return redirect()->route('login');
+        return view('returned_referrals');
+    })->name('returned_referrals');
+
     Route::get('/get_referrals', [\App\Http\Controllers\ReferralController::class, 'getReferrals'])->name('getReferrals');
     Route::get('/get_all_referrals', [\App\Http\Controllers\ReferralController::class, 'getAllReferrals'])->name('getAllReferrals');
     Route::get('/get_triagge_referrals', [\App\Http\Controllers\ReferralController::class, 'getTriaggeReferrals'])->name('getTriaggeReferrals');
+    Route::get('/get_returned_referrals', [\App\Http\Controllers\ReferralController::class, 'getReturnedReferrals'])->name('getReturnedReferrals');
     Route::get('/get_queue', [\App\Http\Controllers\QueueController::class, 'index'])->name('getQueue');
     Route::get('/load_logs', [\App\Http\Controllers\ReferralController::class, 'loadLogs'])->name('loadLogs');
     Route::delete('/delete/referral', [\App\Http\Controllers\QueueController::class, 'delete'])->name('deleteQueue');
