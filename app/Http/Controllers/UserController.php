@@ -24,21 +24,20 @@ class UserController extends Controller
             }
 
             session(['access_rights' => $user_priv->level]);
-            session(['code' => $user_priv->level]);
+            if ($user_priv->level == "EMED")
+                session(['code' => "TRIAGGE"]);
 
             $department = Department::where('code', $user_priv->level)->first();
             if ($department) {
                 session(['access_rights' => $department->department]);
             }
 
-            switch ($user_priv->level) {
+            switch (session('code')) {
                 case "TRIAGGE":
                     return redirect()->intended('/triagge');
                 default:
                     return redirect()->intended('/referrals');
             }
-
-            return redirect()->intended('/opcen');
         }
         return back()->with(['message' => 'The provided credentials do not match our records.']);
     }

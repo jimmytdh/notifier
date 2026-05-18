@@ -1,5 +1,5 @@
 @extends('master')
-@section('Title', 'Patient Timeline')
+@section('Title', 'Track Referrals')
 @section('Subtitle', 'Follow patient movement across departments with full audit visibility.')
 @section('content')
     <div class="col-12">
@@ -46,7 +46,7 @@
                 <div id="page_items_count"></div>
                 <button class="btn btn-sm btn-pager" id="btn_next">
                     <i class="bi bi-caret-right"></i>
-                </button>
+                </button>   
             </div>
         </div>
     </div>

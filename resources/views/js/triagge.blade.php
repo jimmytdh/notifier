@@ -19,6 +19,12 @@
             return window.bootstrap.Modal.getOrCreateInstance(el);
         }
 
+        function getQueueModal() {
+            const el = document.getElementById('queue_modal');
+            if (!el || !window.bootstrap || !window.bootstrap.Modal) return null;
+            return window.bootstrap.Modal.getOrCreateInstance(el);
+        }
+
 
     function getLogs(id) {
         $("#activity_logs").empty();
@@ -263,15 +269,12 @@
             });
 
             $("#btn_done").off("click").on("click", function () {
-                if (!confirm("Are you sure you want to tagged this as DONE?")) return;
-
-                let remarks = prompt("Remarks:", "TAGGED AS DONE");
+                let remarks = prompt("Remarks (optional):", "TAGGED AS DONE");
                 if (remarks === null) return;
                 remarks = remarks.trim();
-                if (remarks == "") {
-                    alert("Please specify remarks");
-                    return;
-                }
+                if (remarks === "") remarks = "TAGGED AS DONE";
+
+                if (!confirm("Are you sure you want to tag this as done?")) return;
 
                 const params = {
                     firebase_key: referral_data.key,
@@ -285,7 +288,7 @@
                     topic: "",
                     remarks: remarks,
                     date_created: referral_data.date_referred
-                }
+                };
 
                 $(this).prop("disabled", true);
                 $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
@@ -303,23 +306,17 @@
                             toastr.error(data.message, "Ooops");
                             return;
                         }
-
                         const modal = getPatientModal();
-                        if (modal) modal.toggle();
+                        if (modal) modal.hide();
                         toastr.success(data.message, "Information");
-
                         deleteChild("23/" + referral_data.key);
-                        const index = getPositionByKey(referral_data.key);
-                        if (index > -1) {
-                            resetPaginationAndReload();
-                        }
-
+                        resetPaginationAndReload();
                     }).catch(err => {
-                    toastr.error(err, "Ooops");
-                }).finally(() => {
-                    $("#btn_done").prop("disabled", false);
-                    $("#btn_done").html("TAG AS DONE");
-                });
+                        toastr.error(err, "Ooops");
+                    }).finally(() => {
+                        $("#btn_done").prop("disabled", false);
+                        $("#btn_done").html(`<i class="bi bi-check2-circle me-1"></i>TAG AS DONE`);
+                    });
             });
 
             $("#btn_queue").off("click").on("click", function () {
@@ -327,16 +324,25 @@
                     toastr.error("No selected patient", "Error");
                     return;
                 }
+                $("#queue_dept_select").val("").removeClass("is-invalid");
+                const queueModal = getQueueModal();
+                if (queueModal) queueModal.show();
+            });
 
-                const remarks = "QUEUED FROM TRIAGGE";
+            $("#btn_confirm_queue").off("click").on("click", function () {
+                const department = $("#queue_dept_select").val();
+                if (!department) {
+                    $("#queue_dept_select").addClass("is-invalid");
+                    return;
+                }
 
                 const params = {
                     referring_hospital: (referral_data.referring_hospital || "TRIAGGE"),
                     patient: (referral_data.patient || ""),
                     age: (referral_data.age || ""),
                     gender: (referral_data.sex || referral_data.gender || ""),
-                    department: (referral_data.department || ""),
-                    remarks: remarks
+                    department: department,
+                    remarks: "QUEUED FROM TRIAGGE"
                 };
 
                 $(this).prop("disabled", true);
@@ -351,19 +357,20 @@
                 })
                     .then(res => res.json())
                     .then(data => {
-                        $("#btn_queue").prop("disabled", false);
-                        $("#btn_queue").html("QUEUE PATIENT");
+                        $("#btn_confirm_queue").prop("disabled", false);
+                        $("#btn_confirm_queue").html(`<i class="bi bi-list-check me-1"></i> Confirm Queue`);
                         if (data.code == 500) {
                             toastr.error(data.message || "Unable to queue patient", "Error");
                             return;
                         }
-
+                        const queueModal = getQueueModal();
+                        if (queueModal) queueModal.hide();
                         toastr.success(data.message, "Information");
                     }).catch(err => {
-                    $("#btn_queue").prop("disabled", false);
-                    $("#btn_queue").html("QUEUE PATIENT");
-                    toastr.error(err.message || "Unable to queue patient", "Error");
-                });
+                        $("#btn_confirm_queue").prop("disabled", false);
+                        $("#btn_confirm_queue").html(`<i class="bi bi-list-check me-1"></i> Confirm Queue`);
+                        toastr.error(err.message || "Unable to queue patient", "Error");
+                    });
             });
 
             $("#btn_send").off("click").on("click", function () {
@@ -418,11 +425,10 @@
                             toastr.error(data.message, "Ooops");
                             return;
                         }
-
                         const forwardModal = getForwardModal();
                         if (forwardModal) forwardModal.hide();
                         const modal = getPatientModal();
-                        if (modal) modal.toggle();
+                        if (modal) modal.hide();
                         toastr.success(data.message, "Information");
                         insert(params.topic, params.patient, function (message) {
                             deleteChild(params.topic);

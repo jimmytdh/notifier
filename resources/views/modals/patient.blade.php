@@ -1,5 +1,5 @@
 <div class="modal fade" id="patient_modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content patient-modal-shell">
             <div class="modal-body patient-modal-body">
                 <div class="patient-head">
@@ -44,7 +44,9 @@
                 </div>
 
                 <div class="patient-action-wrap track-div">
+                    @if(session('code') === 'TRIAGGE')
                     <button class="btn btn-warning" id="btn_queue"><i class="bi bi-list-check me-1"></i>QUEUE PATIENT</button>
+                    @endif
                     <button class="btn btn-primary" id="btn_done"><i class="bi bi-check2-circle me-1"></i>TAG AS DONE</button>
                     <button class="btn btn-success" id="btn_send"><i class="bi bi-send-check me-1"></i>FORWARD TO</button>
                 </div>
@@ -74,6 +76,37 @@
         </div>
     </div>
 </div>
+
+@if(session('code') === 'TRIAGGE')
+<div class="modal fade" id="queue_modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content patient-forward-shell">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title">Queue Patient</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div class="mb-0">
+                    <label class="form-label fw-semibold">Department</label>
+                    <select class="form-control" id="queue_dept_select">
+                        <option value="">Select department</option>
+                        <option value="PEDIA">PEDIATRICS</option>
+                        <option value="INTERNAL MEDICINE">INTERNAL MEDICINE</option>
+                        <option value="SURGERY">SURGERY</option>
+                        <option value="OB GYNE">OB GYNE</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-2">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" id="btn_confirm_queue">
+                    <i class="bi bi-list-check me-1"></i> Confirm Queue
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 <div class="modal fade" id="forward_modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">

@@ -546,6 +546,26 @@ class ReferralController extends Controller
         }
     }
 
+    public function getTriaggeReferrals(Request $request)
+    {
+        try {
+            $patient = $request->search_patient ?? '';
+            $referrals = Referral::where(function ($query) {
+                $query->whereNull('type')->orWhere('type', '!=', 'Manual');
+            })
+            ->when($patient !== '', function ($query) use ($patient) {
+                $query->where('patient', 'LIKE', '%' . $patient . '%');
+            })
+            ->orderBy('date_created', 'DESC')
+            ->skip($request->page * 10)
+            ->take(11)
+            ->get();
+            return response(['code' => 200, 'results' => $referrals]);
+        } catch (\Exception $exception) {
+            return response(['code' => 500, 'message' => $exception->getMessage()]);
+        }
+    }
+
     public function getAllReferrals(Request $request)
     {
         try {

@@ -6,7 +6,7 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta name="theme-color" content="#0f172a">
 
-    <title>@yield('Title', 'Patient Flow Tracker') - {{ session('access_rights') }}</title>
+    <title>@yield('Title', 'Notifier') </title>
     <meta content="" name="description">
     <meta content="" name="keywords">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -409,13 +409,6 @@
 
             contentEl.classList.remove('spa-fade-in');
             contentEl.classList.add('spa-fade-out');
-            setTimeout(() => {
-                contentEl.innerHTML = newContent.innerHTML;
-                contentEl.classList.remove('spa-fade-out');
-                contentEl.classList.add('spa-fade-in');
-                hoistModals();
-            }, 120);
-
             const newTitle = doc.title || '';
             if (newTitle) document.title = newTitle;
 
@@ -424,11 +417,18 @@
             if (incomingTitle) titleEl.textContent = incomingTitle.textContent;
             if (incomingSubtitle) subtitleEl.textContent = incomingSubtitle.textContent;
 
-            runPageScripts(doc);
             const path = urlPath || window.location.pathname;
             setActiveNav(path);
             syncSpeakerModal();
             initGlobalReferralNotifications();
+
+            setTimeout(() => {
+                contentEl.innerHTML = newContent.innerHTML;
+                contentEl.classList.remove('spa-fade-out');
+                contentEl.classList.add('spa-fade-in');
+                hoistModals();
+                runPageScripts(doc);
+            }, 120);
         }
 
         function fetchPage(url, pushState) {

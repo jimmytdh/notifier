@@ -25,8 +25,6 @@
                 <button class="btn btn-secondary btn-filter" data-filter="INTERNAL MEDICINE">INTERNAL MEDICINE</button>
                 <button class="btn btn-secondary btn-filter" data-filter="SURGERY">SURGERY</button>
                 <button class="btn btn-secondary btn-filter" data-filter="OB GYNE">OB GYNE</button>
-                <button class="btn btn-secondary btn-filter" data-filter="EMERGENCY ROOM">EMERGENCY ROOM</button>
-                <button class="btn btn-secondary btn-filter" data-filter="EMED">EMED</button>
             </div>
         </div>
         <div class="table-responsive">
@@ -40,7 +38,7 @@
                     <th>Gender</th>
                     <th>Department</th>
                     <th>Remarks</th>
-                    <th>Date Referred</th>
+                    <th>Date Queued</th>
                     <th style="width: 4%"></th>
                 </tr>
                 </thead>

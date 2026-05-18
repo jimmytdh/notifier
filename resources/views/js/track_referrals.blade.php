@@ -11,6 +11,12 @@
             return window.bootstrap.Modal.getOrCreateInstance(el);
         }
 
+        function getQueueModal() {
+            const el = document.getElementById('queue_modal');
+            if (!el || !window.bootstrap || !window.bootstrap.Modal) return null;
+            return window.bootstrap.Modal.getOrCreateInstance(el);
+        }
+
         function getTypeBadge(type) {
             const normalized = (type || "Referral").toString().trim().toLowerCase();
             if (normalized === "manual") {
@@ -130,7 +136,13 @@
             $modal.find("#bed_no_input").prop("disabled", true);
             $modal.find("#chief_complaint").text(chief_complaint);
             $modal.find("#diagnosis").text(diagnosis);
+            @if(session('code') === 'TRIAGGE')
+            $(".track-div").removeClass("d-none");
+            $(".track-div #btn_done").hide();
+            $(".track-div #btn_send").hide();
+            @else
             $(".track-div").addClass("d-none");
+            @endif
             $("#activity_container").removeClass("d-none");
 
             if (window.hoistModals) {
@@ -177,6 +189,62 @@
                 page--;
                 getReferrals();
             });
+
+            @if(session('code') === 'TRIAGGE')
+            $("#btn_queue").off("click").on("click", function () {
+                if (!referral_id) {
+                    toastr.error("No selected patient", "Error");
+                    return;
+                }
+                $("#queue_dept_select").val("").removeClass("is-invalid");
+                const queueModal = getQueueModal();
+                if (queueModal) queueModal.show();
+            });
+
+            $("#btn_confirm_queue").off("click").on("click", function () {
+                const department = $("#queue_dept_select").val();
+                if (!department) {
+                    $("#queue_dept_select").addClass("is-invalid");
+                    return;
+                }
+
+                const params = {
+                    referring_hospital: $("#referral_id_" + referral_id + " td:eq(1)").text().trim(),
+                    patient:            $("#referral_id_" + referral_id + " td:eq(2)").text().trim(),
+                    age:                $("#referral_id_" + referral_id + " td:eq(3)").text().trim(),
+                    gender:             $("#referral_id_" + referral_id + " td:eq(4)").text().trim(),
+                    department:         department,
+                    remarks:            "QUEUED FROM TRIAGGE"
+                };
+
+                $(this).prop("disabled", true);
+                $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
+                fetch('{{ route('insertQueue') }}', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    body: JSON.stringify(params)
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        $("#btn_confirm_queue").prop("disabled", false);
+                        $("#btn_confirm_queue").html(`<i class="bi bi-list-check me-1"></i> Confirm Queue`);
+                        if (data.code == 500) {
+                            toastr.error(data.message || "Unable to queue patient", "Error");
+                            return;
+                        }
+                        const queueModal = getQueueModal();
+                        if (queueModal) queueModal.hide();
+                        toastr.success(data.message, "Information");
+                    }).catch(err => {
+                        $("#btn_confirm_queue").prop("disabled", false);
+                        $("#btn_confirm_queue").html(`<i class="bi bi-list-check me-1"></i> Confirm Queue`);
+                        toastr.error(err.message || "Unable to queue patient", "Error");
+                    });
+            });
+            @endif
         }
 
         $(document).ready(function () {

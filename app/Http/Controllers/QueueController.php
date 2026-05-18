@@ -36,7 +36,7 @@ class QueueController extends Controller
                         }
                     }
                 })
-                ->orderBy('created_at', 'desc')
+                ->orderBy('created_at', 'asc')
                 ->skip($page * 10)
                 ->take(11)
                 ->get(['id', 'referring_hospital', 'patient', 'age', 'gender', 'department','remarks', 'created_at']);
@@ -48,6 +48,10 @@ class QueueController extends Controller
 
     public function store(Request $request)
     {
+        if (session('code') !== 'TRIAGGE') {
+            return response()->json(['code' => 403, 'message' => 'Access denied'], 403);
+        }
+
         try {
             $request->validate([
                 'referring_hospital' => 'required|string|max:255',
@@ -68,13 +72,6 @@ class QueueController extends Controller
             $duplicateSince = Carbon::now()->subMinutes($this->duplicateWindowMinutes);
             $existing = DB::table($this->tableName)
                 ->where('patient', $patient)
-                ->where(function ($query) use ($department) {
-                    if ($department === null || $department === '') {
-                        $query->whereNull('department')->orWhere('department', '');
-                        return;
-                    }
-                    $query->where('department', $department);
-                })
                 ->where('created_at', '>=', $duplicateSince)
                 ->exists();
 
@@ -105,6 +102,10 @@ class QueueController extends Controller
 
     public function delete(Request $request)
     {
+        if (session('code') !== 'TRIAGGE') {
+            return response()->json(['code' => 403, 'message' => 'Access denied'], 403);
+        }
+
         try {
             DB::table($this->tableName)
                 ->where('id', '=', $request->id)

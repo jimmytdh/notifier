@@ -161,18 +161,20 @@
             page = 0;
             $("#search_patient").val("");
             const userCode = $("#user_code").text().trim();
-            observe(userCode, function (snapshot) {
-                if (!is_init) return;
+            if (userCode) {
+                observe(userCode, function (snapshot) {
+                    if (!is_init) return;
 
-                toastr.success(snapshot.val(), "New incoming referral");
-                responsiveVoice.speak('New incoming referral');
+                    toastr.success(snapshot.val(), "New incoming referral");
+                    responsiveVoice.speak('New incoming referral');
 
-                getReferrals();
-            });
+                    getReferrals();
+                });
 
-            get(userCode, function () {
-                is_init = true;
-            });
+                get(userCode, function () {
+                    is_init = true;
+                });
+            }
 
             $("#patient_modal .card-body").prop("disabled", true);
 
