@@ -35,11 +35,11 @@
                 <div class="patient-clinical">
                     <div class="clinical-card">
                         <label>Diagnosis</label>
-                        <p id="diagnosis"></p>
+                        <p id="diagnosis" style="white-space: pre-wrap;"></p>
                     </div>
                     <div class="clinical-card">
                         <label>Chief Complaint</label>
-                        <p id="chief_complaint"></p>
+                        <p id="chief_complaint" style="white-space: pre-wrap;"></p>
                     </div>
                 </div>
 
