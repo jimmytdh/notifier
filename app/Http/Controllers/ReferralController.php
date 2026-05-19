@@ -76,6 +76,12 @@ class ReferralController extends Controller
     public function insert_referral_5pm(Request $request)
     {
         try {
+            $dateReferred = Carbon::parse($request->date_referred);
+            $hour = (int) $dateReferred->format('G');
+            if ($hour >= 8 && $hour < 17) {
+                return ['code' => 200, 'message' => 'New referral added'];
+            }
+
             $referral = Referral::where('firebase_key', $request->firebase_key)->first();
             if (!$referral) {
                 $referral = new Referral;
