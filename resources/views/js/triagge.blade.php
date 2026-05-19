@@ -173,6 +173,8 @@
             const patientName = toUpper(item.patient);
             const departmentName = toUpper(item.department);
             return patientName.includes(patient) && departmentName.includes(department);
+        }).sort(function (a, b) {
+            return new Date(b.date_referred) - new Date(a.date_referred);
         });
     }
 

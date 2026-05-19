@@ -312,7 +312,9 @@ class ReferralController extends Controller
         try {
             $referral = Referral::where('firebase_key', $request->firebase_key)->first();
             if ($referral) {
-                return response(['code' => 500, 'message' => 'Referral already added']);
+                // Already inserted (DB succeeded but Firebase delete failed previously).
+                // Return success so the frontend still runs deleteChild to clean up Firebase.
+                return response(['code' => 200, 'message' => 'Referral successfully forwarded']);
             }
 
             $referral = new Referral;
