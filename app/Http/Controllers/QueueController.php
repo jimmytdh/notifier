@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 class QueueController extends Controller
 {
     private $tableName = 'csmc_notifier.queue_referrals';
-    private $duplicateWindowMinutes = 10;
 
     public function index(Request $request)
     {
@@ -71,14 +70,15 @@ class QueueController extends Controller
             $remarks = $request->remarks ? trim($request->remarks) : null;
 
             $existing = DB::table($this->tableName)
+                ->where('referring_hospital', $referringHospital)
                 ->where('patient', $patient)
-                ->whereRaw('created_at >= DATE_SUB(NOW(), INTERVAL ? MINUTE)', [$this->duplicateWindowMinutes])
+                ->whereNull('confirmed_at')
                 ->exists();
 
             if ($existing) {
                 return response()->json([
                     'code' => 500,
-                    'message' => 'Patient is already queued for this department in the last ' . $this->duplicateWindowMinutes . ' minutes'
+                    'message' => 'Patient is already queued'
                 ]);
             }
 
