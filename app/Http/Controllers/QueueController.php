@@ -70,10 +70,9 @@ class QueueController extends Controller
             $age = ($request->age !== null && $request->age !== '') ? trim((string)$request->age) : null;
             $remarks = $request->remarks ? trim($request->remarks) : null;
 
-            $duplicateSince = Carbon::now()->subMinutes($this->duplicateWindowMinutes);
             $existing = DB::table($this->tableName)
                 ->where('patient', $patient)
-                ->where('created_at', '>=', $duplicateSince)
+                ->whereRaw('created_at >= DATE_SUB(NOW(), INTERVAL ? MINUTE)', [$this->duplicateWindowMinutes])
                 ->exists();
 
             if ($existing) {
