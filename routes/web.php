@@ -82,6 +82,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/load_logs', [\App\Http\Controllers\ReferralController::class, 'loadLogs'])->name('loadLogs');
     Route::delete('/delete/referral', [\App\Http\Controllers\QueueController::class, 'delete'])->name('deleteQueue');
     Route::post('/insert_queue', [\App\Http\Controllers\QueueController::class, 'store'])->name('insertQueue');
+    Route::post('/confirm_queue', [\App\Http\Controllers\QueueController::class, 'confirm'])->name('confirmQueue');
+    Route::get('/queue_archives', function () { return view('queue_archives'); })->name('queue_archives');
+    Route::get('/get_queue_archives', [\App\Http\Controllers\QueueController::class, 'archives'])->name('getQueueArchives');
 
     Route::post('/insert_referral', [\App\Http\Controllers\ReferralController::class, 'insertReferral'])->name('insertReferral');
     Route::post('/manual_referral', [\App\Http\Controllers\ReferralController::class, 'storeManualReferral'])->name('storeManualReferral');

@@ -20,6 +20,7 @@ class QueueController extends Controller
             $page = max((int) $request->page, 0);
 
             $list = DB::table($this->tableName)
+                ->whereNull('confirmed_at')
                 ->where(function ($query) use ($department, $patient) {
                     if ($patient != "") {
                         $query->where("patient", "LIKE", "%" . $patient . "%");
@@ -114,6 +115,68 @@ class QueueController extends Controller
             return response()->json(['message' => 'Queue deleted']);
         } catch (\Exception $exception) {
             return response()->json(['error' => $exception->getMessage()], 500);
+        }
+    }
+
+    public function archives(Request $request)
+    {
+        try {
+            $patient = trim($request->search_patient ?? '');
+            $department = trim($request->search_department ?? '');
+            $page = max((int) $request->page, 0);
+
+            $list = DB::table($this->tableName)
+                ->whereNotNull('confirmed_at')
+                ->where(function ($query) use ($department, $patient) {
+                    if ($patient != "") {
+                        $query->where("patient", "LIKE", "%" . $patient . "%");
+                    }
+                    if ($department != "") {
+                        $query->where('department', '=', $department);
+                    }
+                })
+                ->orderBy('confirmed_at', 'desc')
+                ->skip($page * 10)
+                ->take(11)
+                ->get(['id', 'referring_hospital', 'patient', 'age', 'gender', 'department', 'remarks', 'created_at', 'confirmed_at']);
+
+            return response()->json(['results' => $list]);
+        } catch (\Exception $exception) {
+            return response()->json(['error' => $exception->getMessage()], 500);
+        }
+    }
+
+    public function confirm(Request $request)
+    {
+        if (session('code') !== 'TRIAGGE') {
+            return response()->json(['code' => 403, 'message' => 'Access denied'], 403);
+        }
+
+        try {
+            $record = DB::table($this->tableName)->where('id', $request->id)->first();
+
+            if (!$record) {
+                return response()->json(['code' => 404, 'message' => 'Record not found'], 404);
+            }
+
+            $confirmedAt = Carbon::now();
+            $queuedAt = Carbon::parse($record->created_at);
+            $minutes = $queuedAt->diffInMinutes($confirmedAt);
+            $seconds = $queuedAt->diffInSeconds($confirmedAt) % 60;
+
+            DB::table($this->tableName)
+                ->where('id', $request->id)
+                ->update(['confirmed_at' => $confirmedAt, 'updated_at' => $confirmedAt]);
+
+            return response()->json([
+                'code' => 200,
+                'message' => 'Patient confirmed',
+                'turnaround_minutes' => $minutes,
+                'turnaround_seconds' => $seconds,
+                'patient' => $record->patient,
+            ]);
+        } catch (\Exception $exception) {
+            return response()->json(['code' => 500, 'message' => $exception->getMessage()], 500);
         }
     }
 }

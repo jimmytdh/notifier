@@ -174,8 +174,11 @@
                                     <td>` + department + `</td>
                                     <td>` + it.remarks + `</td>
                                     <td>` + moment(it.created_at).format("MM/DD/YYYY hh:mm:ss A") + `</td>
-                                    <td>
-                                         <button class='btn btn-sm' style="background: transparent" onClick='deleteQueue("` + it.id + `")'>
+                                    <td class="d-flex gap-1 justify-content-center">
+                                         <button class='btn btn-sm' style="background: transparent" title="Confirm received" onClick='confirmQueue("` + it.id + `")'>
+                                            <i class="bi bi-check-circle-fill text-success"></i>
+                                         </button>
+                                         <button class='btn btn-sm' style="background: transparent" title="Delete" onClick='deleteQueue("` + it.id + `")'>
                                             <i class="bi bi-trash-fill text-danger"></i>
                                          </button>
                                     </td>
@@ -188,6 +191,31 @@
             $("#referral_list").empty();
             $("#referral_list").append("<tr><td colspan='9'>" + err.message + "</td></tr>");
         });
+        }
+
+        window.confirmQueue = function confirmQueue(id) {
+        if (confirm("Confirm that this patient has been received by the department?")) {
+            fetch('{{ route('confirmQueue') }}', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                body: JSON.stringify({id: id})
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.code !== 200) {
+                        toastr.error(data.message || "Failed to confirm", "Error");
+                        return;
+                    }
+                    const tat = data.turnaround_minutes + "m " + data.turnaround_seconds + "s";
+                    toastr.success(data.patient + " confirmed. Turnaround time: " + tat, "Confirmed");
+                    getReferrals();
+                }).catch(err => {
+                toastr.error(err.message || "Something went wrong", "Error");
+            });
+        }
         }
 
         window.deleteQueue = function deleteQueue(id) {

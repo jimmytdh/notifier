@@ -48,5 +48,13 @@
                     <span>Referral Queue</span>
                 </a>
             </li>
+        @if(session('code') == "TRIAGGE")
+            <li class="nav-item">
+                <a class="nav-link {{ $routeName == 'queue_archives' ? 'active' : 'collapsed' }}" href="{{ route('queue_archives') }}">
+                    <i class="bi bi-archive"></i>
+                    <span>Queue Archives</span>
+                </a>
+            </li>
+        @endif
     </ul>
 </aside><!-- End Sidebar-->
