@@ -41,8 +41,10 @@ class ReferralController extends Controller
 
                 $user = Auth::user();
                 $user->role = $user_priv->level;
-                if ($user_priv == "EMED")
+                $user->topic = $user_priv->level;
+                if ($user_priv->level == "EMED") {
                     $user->topic = "TRIAGGE";
+                }
 
                 #CHECK IF USER IS DEPARTMENT/DOCTORS
                 if ($user_priv->level != 'TRIAGGE' && $user_priv->level != 'MANAGEMENT') {
