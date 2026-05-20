@@ -85,6 +85,12 @@ class ReferralController extends Controller
     public function insert_referral_5pm(Request $request)
     {
         try {
+            if (true) {
+                #ADDING EARLY RETURN STATEMENT BECAUSE REFERRAL SYSTEM STILL INSERT DATA FROM FRIREBASE
+                #POSSIBLE DUPLICATE ENTRY (FIREBASE + MYSQL DATABASE())
+                return ['code' => 200, 'message' => 'New referral added'];
+            }
+
             $dateReferred = Carbon::parse($request->date_referred);
             $hour = (int) $dateReferred->format('G');
             if ($hour >= 8 && $hour < 17) {
