@@ -903,7 +903,7 @@ class ReferralController extends Controller
                 })
                 ->orderBy('created_at', 'asc')
                 ->get(['id', 'referring_hospital', 'patient', 'age', 'gender', 'department', 'remarks', 'created_at']);
-            return response()->json($list);
+            return response()->json(['code' => 200, 'results' => $list]);
         } catch (\Exception $exception) {
             return response()->json(['error' => $exception->getMessage()], 500);
         }
