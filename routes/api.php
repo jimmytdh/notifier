@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 
-Route::get('/get_firebase', [\App\Http\Controllers\ReferralController::class, 'getFirebase']);
 Route::post('/insert_referral', [\App\Http\Controllers\ReferralController::class, 'insert_referral']);
 Route::post('/insert_referral_5pm', [\App\Http\Controllers\ReferralController::class, 'insert_referral_5pm']);
 Route::post('/login', [\App\Http\Controllers\ReferralController::class, 'login']);
@@ -27,6 +26,7 @@ Route::get('/get_departments', [\App\Http\Controllers\DepartmentController::clas
 Route::get('/load_summary', [\App\Http\Controllers\ReferralController::class, 'load_summary']);
 Route::get('/load_logs', [\App\Http\Controllers\ReferralController::class, 'load_logs']);
 
+Route::get('/queue_list', [\App\Http\Controllers\ReferralController::class, 'queueList']);
 Route::post('/queue_referral', [\App\Http\Controllers\ReferralController::class, 'store']);
 Route::post('/send_push_notification', [\App\Http\Controllers\ReferralController::class, 'sendPushNotification']);
 

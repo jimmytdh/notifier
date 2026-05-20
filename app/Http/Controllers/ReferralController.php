@@ -62,9 +62,15 @@ class ReferralController extends Controller
     {
         try {
             $user = User::find($request->id);
+
+            if (!$user) {
+                return ['code' => 500, 'message' => 'User dont exists'];
+            }
+
             if (!Hash::check($request->old_password, $user->password)) {
                 return ['code' => 500, 'message' => 'Incorrect old password'];
             }
+
             $user->password = bcrypt($request->new_password);
             $user->save();
             return ['code' => 200, 'message' => 'Password successfully changed'];
@@ -109,14 +115,14 @@ class ReferralController extends Controller
             return ['code' => 200, 'message' => 'New referral added'];
         } catch (\Exception $err) {
             $this->insert_error(99999, $err->getMessage());
-            return ['code' => 500, 'message' => $err];
+            return ['code' => 500, 'message' => $err->getMessage()];
         }
     }
 
     public function insert_referral(Request $request)
     {
         try {
-            $referral = Referral::where('firebase_key', $request->firebase_key)->get()->first();
+            $referral = Referral::where('firebase_key', $request->firebase_key)->first();
             if ($referral) {
                 return response()->json(['code' => 500, 'message' => 'Referral already added']);
             }
@@ -151,18 +157,18 @@ class ReferralController extends Controller
             $logs->remarks = $request->remarks;
             $logs->save();
 
-            $this->forwardPushNotification('referrals_'.$request->code,$request->referring_hospital,$request->patient,$request->age,$request->gender);
+            $this->forwardPushNotification('referrals_' . $request->code, $request->referring_hospital, $request->patient, $request->age, $request->gender);
             return ['code' => 200, 'message' => "Referral successfully forwarded"];
         } catch (\Exception $err) {
             $this->insert_error($request->userid, $err->getMessage());
-            return ['code' => 500, 'message' => $err];
+            return ['code' => 500, 'message' => $err->getMessage()];
         }
     }
 
     public function forward_referral(Request $request)
     {
         try {
-            $referral = Referral::where('firebase_key', $request->firebase_key)->get()->first();
+            $referral = Referral::where('firebase_key', $request->firebase_key)->first();
             if (!$referral) {
                 return ['code' => 401, 'message' => 'Referral not found'];
             }
@@ -188,7 +194,7 @@ class ReferralController extends Controller
             $referral->department = $request->destination;
             $referral->save();
 
-            $this->forwardPushNotification('referrals_'.$request->code, $referral->referring_hospital, $referral->patient, $referral->age, $referral->gender);
+            $this->forwardPushNotification('referrals_' . $request->code, $referral->referring_hospital, $referral->patient, $referral->age, $referral->gender);
             return response()->json(['code' => 200, 'message' => 'Referral forwarded successfully']);
         } catch (\Exception $err) {
             $this->insert_error($request->forwarded_by, $err->getMessage());
@@ -217,13 +223,13 @@ class ReferralController extends Controller
             $logs->remarks = $request->remarks;
             $logs->save();
 
-            $referral->status = $request->remarks;
+            $referral->status = "DONE";
             $referral->save();
 
             return ['code' => 200, 'message' => 'Tagged successfully'];
         } catch (\Exception $err) {
-            $this->insert_error($request->userid, $err);
-            return ['code' => 500, 'message' => $err];
+            $this->insert_error($request->userid, $err->getMessage());
+            return ['code' => 500, 'message' => $err->getMessage()];
         }
     }
 
@@ -237,11 +243,14 @@ class ReferralController extends Controller
                     ['status', '=', null]
                 ];
 
-            return ['code' => 200, 'results' => Referral::where($search_filters)
-                ->orWhere('status', '<>', 'DONE')
-                ->get()];
+            return [
+                'code' => 200,
+                'results' => Referral::where($search_filters)
+                    ->orWhere('status', '<>', 'DONE')
+                    ->get()
+            ];
         } catch (\Exception $err) {
-            return ['code' => 500, 'message' => $err];
+            return ['code' => 500, 'message' => $err->getMessage()];
         }
     }
 
@@ -266,7 +275,7 @@ class ReferralController extends Controller
         $userIds = $logs->pluck('forwarded_by')
             ->merge($logs->pluck('tagged_by'))
             ->filter(function ($id) {
-                return !is_null($id) && (int)$id > 0;
+                return !is_null($id) && (int) $id > 0;
             })
             ->unique()
             ->values();
@@ -537,7 +546,7 @@ class ReferralController extends Controller
         try {
             $patient = $request->search_patient;
             $referrals = Referral::
-            where('department', session('access_rights'))
+                where('department', session('access_rights'))
                 ->where(function ($query) use ($patient) {
                     $query->whereNull('status');
                     if ($patient != "") {
@@ -580,13 +589,13 @@ class ReferralController extends Controller
             $referrals = Referral::where(function ($query) {
                 $query->whereNull('type')->orWhere('type', '!=', 'Manual');
             })
-            ->when($patient !== '', function ($query) use ($patient) {
-                $query->where('patient', 'LIKE', '%' . $patient . '%');
-            })
-            ->orderBy('date_created', 'DESC')
-            ->skip($request->page * 10)
-            ->take(11)
-            ->get();
+                ->when($patient !== '', function ($query) use ($patient) {
+                    $query->where('patient', 'LIKE', '%' . $patient . '%');
+                })
+                ->orderBy('date_created', 'DESC')
+                ->skip($request->page * 10)
+                ->take(11)
+                ->get();
             return response(['code' => 200, 'results' => $referrals]);
         } catch (\Exception $exception) {
             return response(['code' => 500, 'message' => $exception->getMessage()]);
@@ -624,7 +633,7 @@ class ReferralController extends Controller
         $userIds = $logs->pluck('forwarded_by')
             ->merge($logs->pluck('tagged_by'))
             ->filter(function ($id) {
-                return !is_null($id) && (int)$id > 0;
+                return !is_null($id) && (int) $id > 0;
             })
             ->unique()
             ->values();
@@ -683,89 +692,86 @@ class ReferralController extends Controller
     #Returns a bearer token to be used when sending push notification
     public function generateBearerToken()
     {
-        try {
 
-            if (Cache::has('firebase_bearer_token')) {
-                return Cache::get('firebase_bearer_token');
-            }
-
-            if (!$this->jwt_token) {
-                $this->jwt_token = $this->createJwtToken();
-            }
-
-            $curl = curl_init();
-
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => 'https://oauth2.googleapis.com/token',
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => '',
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => http_build_query([
-                    'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-                    'assertion' => $this->jwt_token
-                ]),
-                CURLOPT_HTTPHEADER => array(
-                    'Content-Type: application/x-www-form-urlencoded'
-                ),
-                CURLOPT_SSL_VERIFYHOST => 0,  // Disable SSL host verification (only for development)
-                CURLOPT_SSL_VERIFYPEER => 0   // Disable SSL certificate verification (only for development)
-            ));
-
-            $response = curl_exec($curl);
-
-            if (curl_errno($curl)) {
-                throw new \Exception(curl_error($curl));  // Catch curl errors
-            }
-
-            curl_close($curl);
-
-            // Parse the response to extract the token and expiration time
-            $responseArray = json_decode($response, true);
-            if (isset($responseArray['access_token'])) {
-                $bearerToken = $responseArray['access_token'];
-                $expiresIn = $responseArray['expires_in'];  // Expiry time in seconds, usually 3600
-
-                // Cache the token with an expiration time slightly shorter than its actual expiration
-                Cache::put('firebase_bearer_token', $bearerToken, now()->addSeconds($expiresIn - 60));  // Subtract 1 minute for buffer
-
-                return $bearerToken;
-            } else {
-                throw new \Exception('Failed to retrieve access token.');
-            }
-        } catch (\Exception $exception) {
-            return response()->json($exception->getMessage(), 500);
+        if (Cache::has('firebase_bearer_token')) {
+            return Cache::get('firebase_bearer_token');
         }
+
+        if (!$this->jwt_token) {
+            $this->jwt_token = $this->createJwtToken();
+        }
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://oauth2.googleapis.com/token',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => http_build_query([
+                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion' => $this->jwt_token
+            ]),
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: application/x-www-form-urlencoded'
+            ),
+            CURLOPT_SSL_VERIFYHOST => 0,  // Disable SSL host verification (only for development)
+            CURLOPT_SSL_VERIFYPEER => 0   // Disable SSL certificate verification (only for development)
+        ));
+
+        $response = curl_exec($curl);
+
+        if (curl_errno($curl)) {
+            throw new \Exception(curl_error($curl));  // Catch curl errors
+        }
+
+        curl_close($curl);
+
+        // Parse the response to extract the token and expiration time
+        $responseArray = json_decode($response, true);
+        if (isset($responseArray['access_token'])) {
+            $bearerToken = $responseArray['access_token'];
+            $expiresIn = $responseArray['expires_in'];  // Expiry time in seconds, usually 3600
+
+            // Cache the token with an expiration time slightly shorter than its actual expiration
+            Cache::put('firebase_bearer_token', $bearerToken, now()->addSeconds($expiresIn - 60));  // Subtract 1 minute for buffer
+
+            return $bearerToken;
+        } else {
+            throw new \Exception('Failed to retrieve access token.');
+        }
+
 
     }
 
     public function sendPushNotification(Request $request)
     {
-        $request->validate([
-            'topic' => 'required|string',
-            'hospital_referrer' => 'required|string',
-            'patient' => 'required|string',
-            'age' => 'required|integer',
-            'sex' => 'required|string'
-        ]);
-
-        $bearer_token = 'Authorization: Bearer ' . $this->generateBearerToken();
-        $payload = [
-            "message" => [
-                "topic" => $request->topic,
-                "data" => [
-                    "hospital_referrer" => $request->hospital_referrer,
-                    "patient" => $request->patient,
-                    "age" => $request->age,
-                    "sex" => $request->sex
-                ]
-            ]
-        ];
-
         try {
+            $request->validate([
+                'topic' => 'required|string',
+                'hospital_referrer' => 'required|string',
+                'patient' => 'required|string',
+                'age' => 'required|integer',
+                'sex' => 'required|string'
+            ]);
+
+            $bearer_token = 'Authorization: Bearer ' . $this->generateBearerToken();
+            $payload = [
+                "message" => [
+                    "topic" => $request->topic,
+                    "data" => [
+                        "hospital_referrer" => $request->hospital_referrer,
+                        "patient" => $request->patient,
+                        "age" => $request->age,
+                        "sex" => $request->sex
+                    ]
+                ]
+            ];
+
             $curl = curl_init();
             curl_setopt_array($curl, array(
                 CURLOPT_URL => 'https://fcm.googleapis.com/v1/projects/notifier-5e4e8/messages:send',
@@ -811,8 +817,8 @@ class ReferralController extends Controller
                     "data" => [
                         "hospital_referrer" => $hospital_referrer,
                         "patient" => $patient,
-                        "age" => (string)$age,
-                        "sex" => (string)$sex
+                        "age" => (string) $age,
+                        "sex" => (string) $sex
                     ]
                 ]
             ];
@@ -870,4 +876,39 @@ class ReferralController extends Controller
             return ['code' => 500, 'message' => $exception];
         }
     }
+
+    public function queueList(Request $request)
+    {
+        try {
+            $patient = trim($request->patient ?? '');
+            $department = trim($request->department ?? '');
+
+            $list = DB::table('csmc_notifier.queue_referrals')
+                ->whereNull('confirmed_at')
+                ->where(function ($query) use ($department, $patient) {
+                    if ($patient != "") {
+                        $query->where("patient", "LIKE", "%" . $patient . "%");
+                    }
+
+                    if ($department != "") {
+                        if (strtoupper($department) === 'EMERGENCY ROOM') {
+                            $query->where(function ($subQuery) {
+                                $subQuery->where('department', 'LIKE', 'ER%')
+                                    ->orWhere('department', 'LIKE', '%EMERGENCY ROOM%');
+                            });
+                        } else {
+                            $query->where('department', '=', $department);
+                        }
+                    }
+                })
+                ->orderBy('created_at', 'asc')
+                ->get(['id', 'referring_hospital', 'patient', 'age', 'gender', 'department', 'remarks', 'created_at']);
+            return response()->json($list);
+        } catch (\Exception $exception) {
+            return response()->json(['error' => $exception->getMessage()], 500);
+        }
+    }
+
+
+
 }
