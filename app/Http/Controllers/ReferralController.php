@@ -286,7 +286,7 @@ class ReferralController extends Controller
             ->unique()
             ->values();
 
-        $usersById = User::whereIn('id', $userIds)->get(['id', 'fname', 'lname', 'name'])->keyBy('id');
+        $usersById = User::whereIn('id', $userIds)->get(['id', 'fname', 'lname', 'mname'])->keyBy('id');
 
         $logs = $logs->map(function ($log) use ($usersById) {
             $forwardId = (int) ($log->forwarded_by ?? 0);
