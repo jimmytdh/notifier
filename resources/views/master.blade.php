@@ -383,11 +383,11 @@
         window.cleanupModals = cleanupModals;
 
         function hoistModals() {
-            const modals = document.querySelectorAll('#spa-content .modal');
-            modals.forEach(modal => {
-                const existing = document.body.querySelector(`#${modal.id}`);
-                if (existing && existing !== modal) {
-                    existing.remove();
+            document.querySelectorAll('#spa-content .modal').forEach(modal => {
+                if (modal.id) {
+                    document.querySelectorAll('body #' + modal.id).forEach(function (el) {
+                        if (el !== modal) el.remove();
+                    });
                 }
                 document.body.appendChild(modal);
             });
