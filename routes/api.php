@@ -29,6 +29,6 @@ Route::get('/load_logs', [\App\Http\Controllers\ReferralController::class, 'load
 Route::get('/queue_list', [\App\Http\Controllers\ReferralController::class, 'queueList']);
 Route::post('/queue_referral', [\App\Http\Controllers\ReferralController::class, 'store']);
 Route::post('/send_push_notification', [\App\Http\Controllers\ReferralController::class, 'sendPushNotification']);
-
+Route::get('/get_all_referrals', [\App\Http\Controllers\ReferralController::class, 'getAllReferrals']);
 
 

@@ -247,6 +247,9 @@ class ReferralController extends Controller
                 'code' => 200,
                 'results' => Referral::where($search_filters)
                     ->orWhere('status', '<>', 'DONE')
+                    ->orderBy('date_created', 'DESC')
+                    ->skip($request->input('page', 0) * 10)
+                    ->take(11)
                     ->get()
             ];
         } catch (\Exception $err) {
