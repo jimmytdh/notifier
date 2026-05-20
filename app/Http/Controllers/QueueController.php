@@ -39,7 +39,11 @@ class QueueController extends Controller
                 ->orderBy('created_at', 'asc')
                 ->skip($page * 10)
                 ->take(11)
-                ->get(['id', 'referring_hospital', 'patient', 'age', 'gender', 'department','remarks', 'created_at']);
+                ->select([
+                    'id', 'referring_hospital', 'patient', 'age', 'gender', 'department', 'remarks', 'created_at',
+                    DB::raw("(SELECT COUNT(*) + 1 FROM {$this->tableName} q2 WHERE q2.confirmed_at IS NULL AND (q2.created_at < queue_referrals.created_at OR (q2.created_at = queue_referrals.created_at AND q2.id < queue_referrals.id))) AS queue_position")
+                ])
+                ->get();
             return response()->json(['results' => $list]);
         } catch (\Exception $exception) {
             return response()->json(['error' => $exception->getMessage()], 500);

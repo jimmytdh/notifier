@@ -164,9 +164,8 @@
                 for (let i = 0; i < max_visible; i++) {
                     const it = data.results[i];
                     const department = (it.department) ? it.department : "";
-                    const queueNumber = (page * 10) + i + 1;
                     const tr = `<tr id="referral_id_` + it.id + `">
-                                    <td>` + queueNumber + `</td>
+                                    <td>` + it.queue_position + `</td>
                                     <td>` + it.referring_hospital + `</td>
                                     <td>` + it.patient + `</td>
                                     <td>` + it.age + `</td>

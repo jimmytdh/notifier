@@ -427,6 +427,7 @@
                 contentEl.classList.remove('spa-fade-out');
                 contentEl.classList.add('spa-fade-in');
                 hoistModals();
+                populateDepartmentSelects();
                 runPageScripts(doc);
             }, 120);
         }
@@ -462,7 +463,51 @@
             return true;
         }
 
+        window._departments = [];
+
+        function populateDepartmentSelects() {
+            const depts = window._departments;
+            if (!depts.length) return;
+            document.querySelectorAll('.dept-select-dynamic').forEach(function (select) {
+                const current = select.value;
+                while (select.options.length > 1) select.remove(1);
+                depts.forEach(function (dept) {
+                    const opt = document.createElement('option');
+                    opt.value = dept.code;
+                    opt.textContent = dept.department;
+                    select.appendChild(opt);
+                });
+                select.value = current;
+            });
+            document.querySelectorAll('.dept-filters-dynamic').forEach(function (container) {
+                const active = container.querySelector('.btn-filter.btn-success');
+                const activeFilter = active ? active.getAttribute('data-filter') : null;
+                container.innerHTML = '';
+                depts.forEach(function (dept) {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-secondary btn-filter' + (activeFilter === dept.code ? ' btn-success' : '');
+                    btn.setAttribute('data-filter', dept.code);
+                    btn.textContent = dept.department;
+                    container.appendChild(btn);
+                });
+            });
+        }
+        window.populateDepartmentSelects = populateDepartmentSelects;
+
+        function loadDepartments() {
+            fetch('{{ route('getDepartments') }}')
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data.results) {
+                        window._departments = data.results;
+                        populateDepartmentSelects();
+                    }
+                })
+                .catch(function () {});
+        }
+
         hoistModals();
+        loadDepartments();
         syncSpeakerModal();
         initGlobalReferralNotifications();
 

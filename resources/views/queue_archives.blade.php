@@ -20,12 +20,7 @@
     <div class="card premium-card">
         <div class="card-body">
             <h5 class="card-title">Archive by Department</h5>
-            <div class="d-flex gap-2 mb-3 flex-wrap">
-                <button class="btn btn-secondary btn-filter" data-filter="PEDIA">PEDIATRICS</button>
-                <button class="btn btn-secondary btn-filter" data-filter="INTERNAL MEDICINE">INTERNAL MEDICINE</button>
-                <button class="btn btn-secondary btn-filter" data-filter="SURGERY">SURGERY</button>
-                <button class="btn btn-secondary btn-filter" data-filter="OB GYNE">OB GYNE</button>
-            </div>
+            <div class="d-flex gap-2 mb-3 flex-wrap dept-filters-dynamic"></div>
         </div>
         <div class="table-responsive">
             <table class="table text-center premium-table">

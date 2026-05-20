@@ -88,12 +88,8 @@
             <div class="modal-body pt-2">
                 <div class="mb-0">
                     <label class="form-label fw-semibold">Department</label>
-                    <select class="form-control" id="queue_dept_select">
+                    <select class="form-control dept-select-dynamic" id="queue_dept_select">
                         <option value="">Select department</option>
-                        <option value="PEDIA">PEDIATRICS</option>
-                        <option value="INTERNAL MEDICINE">INTERNAL MEDICINE</option>
-                        <option value="SURGERY">SURGERY</option>
-                        <option value="OB GYNE">OB GYNE</option>
                     </select>
                 </div>
             </div>
@@ -118,14 +114,8 @@
             <div class="modal-body pt-2">
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Department</label>
-                    <select class="form-control" id="forward_department">
+                    <select class="form-control dept-select-dynamic" id="forward_department">
                         <option value="">Select department</option>
-                        <option value="GS">GENERAL SURGERY</option>
-                        <option value="IM">INTERNAL MEDICINE</option>
-                        <option value="ER">EMERGENCY ROOM</option>
-                        <option value="SURGERY">SURGERY</option>
-                        <option value="OB">OB GYNE</option>
-                        <option value="PEDIA">PEDIATRICS</option>
                     </select>
                 </div>
                 <div class="mb-0">

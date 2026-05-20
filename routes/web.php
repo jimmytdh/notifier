@@ -33,9 +33,11 @@ Route::get('/logout', function () {
 })->name('logout');
 
 Route::get('/download', function () {
-    $url = url('../notifier/apk/notifier_apk_1.3.apk');
-    return redirect()->to($url);
-});
+    $path = public_path('apk/notifier_apk_1.3.apk');
+    return response()->download($path, 'notifier_apk_1.3.apk', [
+        'Content-Type' => 'application/vnd.android.package-archive',
+    ]);
+})->name('download');
 
 Route::post('/authenticate', [\App\Http\Controllers\UserController::class, 'authenticate'])->name('authenticate');
 
@@ -85,6 +87,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/confirm_queue', [\App\Http\Controllers\QueueController::class, 'confirm'])->name('confirmQueue');
     Route::get('/queue_archives', function () { return view('queue_archives'); })->name('queue_archives');
     Route::get('/get_queue_archives', [\App\Http\Controllers\QueueController::class, 'archives'])->name('getQueueArchives');
+    Route::get('/get_departments', [\App\Http\Controllers\DepartmentController::class, 'get_departments'])->name('getDepartments');
 
     Route::post('/insert_referral', [\App\Http\Controllers\ReferralController::class, 'insertReferral'])->name('insertReferral');
     Route::post('/manual_referral', [\App\Http\Controllers\ReferralController::class, 'storeManualReferral'])->name('storeManualReferral');
