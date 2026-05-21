@@ -46,13 +46,13 @@ class ReferralController extends Controller
                     $user->topic = "TRIAGGE";
                 }
 
-                #CHECK IF USER IS DEPARTMENT/DOCTORS
-                if ($user_priv->level != 'TRIAGGE' && $user_priv->level != 'MANAGEMENT') {
-                    $department = Department::where('code', $user_priv->level)->first();
-                    if ($department) {
-                        $user->role = $department->department;
-                    }
-                }
+                // #CHECK IF USER IS DEPARTMENT/DOCTORS
+                // if ($user_priv->level != 'TRIAGGE' && $user_priv->level != 'MANAGEMENT') {
+                //     $department = Department::where('code', $user_priv->level)->first();
+                //     if ($department) {
+                //         $user->role = $department->department;
+                //     }
+                // }
                 return ['code' => 200, 'result' => $user];
             }
             return ['code' => 500, 'message' => 'Invalid credentials'];
