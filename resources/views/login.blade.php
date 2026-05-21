@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,7 +9,9 @@
     <link href="assets/img/favicon.png" rel="icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+        rel="stylesheet">
     <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
@@ -161,44 +164,55 @@
         }
     </style>
 </head>
+
 <body>
-<div class="login-shell">
-    <div class="brand-side">
-        <span class="brand-chip">CSMC Digital</span>
-        <h1>Inter-Departmental Referral</h1>
-        <p>Once a patient is referred from another hospital to CSMC, this system handles inter-department forwarding, tracks each movement, and keeps receiving departments informed.</p>
-    </div>
-    <div class="form-side">
-        <div class="logo-wrap text-center">
-            <img src="assets/img/logo.png" alt="CSMC Logo">
+    <div class="login-shell">
+        <div class="brand-side">
+            <span class="brand-chip">CSMC Digital</span>
+            <h1>Inter-Departmental Referral</h1>
+            <p>Once a patient is referred from another hospital to CSMC, this system handles inter-department
+                forwarding, tracks each movement, and keeps receiving departments informed.</p>
         </div>
-        <h2 class="form-title text-center">CSMC Notifier</h2>
-        <div class="form-subtitle text-center">Sign in to continue</div>
+        <div class="form-side">
+            <div class="logo-wrap text-center">
+                <img src="assets/img/logo.png" alt="CSMC Logo">
+            </div>
+            <h2 class="form-title text-center">CSMC Notifier</h2>
+            <div class="form-subtitle text-center">Sign in to continue</div>
 
-        @if(Session::has('message'))
-            <div class="alert alert-danger text-center">
-                {{ Session::get('message') }}
-            </div>
-        @endif
+            @if(Session::has('message'))
+                <div class="alert alert-danger text-center">
+                    {{ Session::get('message') }}
+                </div>
+            @endif
 
-        <form method="post" action="{{ route('authenticate') }}">
-            {{ csrf_field() }}
-            <div class="mb-3">
-                <label for="inputUsername" class="form-label">Username</label>
-                <input type="text" name="username" id="inputUsername" class="form-control" required autofocus>
-            </div>
-            <div class="mb-4">
-                <label for="inputPassword" class="form-label">Password</label>
-                <input type="password" name="password" id="inputPassword" class="form-control" required>
-            </div>
-            <button class="btn btn-success btn-login w-100" type="submit">Login</button>
-        </form>
-        <a href="{{  route('download') }}" class="btn btn-outline-secondary w-100 mt-2" style="border-radius:12px;height:48px;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:600;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/></svg>
-            Download Android App
-        </a>
-        <div class="copyright">Cebu South Medical Center</div>
+            <form method="post" action="{{ route('authenticate') }}">
+                {{ csrf_field() }}
+                <div class="mb-3">
+                    <label for="inputUsername" class="form-label">Username</label>
+                    <input type="text" name="username" id="inputUsername" class="form-control" required autofocus>
+                </div>
+                <div class="mb-4">
+                    <label for="inputPassword" class="form-label">Password</label>
+                    <input type="password" name="password" id="inputPassword" class="form-control" required>
+                </div>
+                <button class="btn btn-success btn-login w-100" type="submit">Login</button>
+            </form>
+            @if(false)
+                <a href="{{  route('download') }}" class="btn btn-outline-secondary w-100 mt-2"
+                    style="border-radius:12px;height:48px;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:600;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path
+                            d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5" />
+                        <path
+                            d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z" />
+                    </svg>
+                    Download Android App
+                </a>
+            @endif
+            <div class="copyright">Cebu South Medical Center</div>
+        </div>
     </div>
-</div>
 </body>
+
 </html>
