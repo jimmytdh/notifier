@@ -296,6 +296,8 @@
                     return;
                 }
 
+                const patient = $("#referral_id_" + referral_id + " td:eq(2)").text().trim();
+
                 const params = {
                     id:                 referral_id,
                     department:         department,
@@ -328,6 +330,9 @@
                         const modal = getPatientModal();
                         if (modal) modal.hide();
                         toastr.success(data.message, "Information");
+                        insert(topic, patient, function (message) {
+                            deleteChild(topic);
+                        });
                         getReferrals();
                     }).catch(err => {
                         $("#btn_confirm_forward").prop("disabled", false);
