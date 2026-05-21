@@ -59,8 +59,8 @@
 
                     for (let i = 0; i < max_visible; i++) {
                         const it = data.results[i];
-                        const ward   = it.ward   || '';
-                        const bedNo  = it.bed_no || '';
+                        const ward = it.ward || '';
+                        const bedNo = it.bed_no || '';
                         const tr = `<tr id="referral_id_${it.id}">
                                         <td>${getTypeBadge(it.type)}</td>
                                         <td>${it.referring_hospital || ''}</td>
@@ -93,7 +93,7 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.referral) {
-                        const ward  = (data.referral.ward  || '').toString().trim();
+                        const ward = (data.referral.ward || '').toString().trim();
                         const bedNo = (data.referral.bed_no || '').toString().trim();
                         $("#patient_modal #ward_input").val(ward);
                         $("#patient_modal #bed_no_input").val(bedNo);
@@ -120,12 +120,12 @@
 
         window.viewPatient = function (id) {
             referral_id = id;
-            const patient   = $("#referral_id_" + id + " td:eq(2)").text();
-            const age       = $("#referral_id_" + id + " td:eq(3)").text();
-            const sex       = $("#referral_id_" + id + " td:eq(4)").text();
-            const ward      = $("#referral_id_" + id + " td:eq(7)").text().trim();
-            const bedNo     = $("#referral_id_" + id + " td:eq(8)").text().trim();
-            const cc        = $("#referral_id_" + id + " td:eq(9)").text();
+            const patient = $("#referral_id_" + id + " td:eq(2)").text();
+            const age = $("#referral_id_" + id + " td:eq(3)").text();
+            const sex = $("#referral_id_" + id + " td:eq(4)").text();
+            const ward = $("#referral_id_" + id + " td:eq(7)").text().trim();
+            const bedNo = $("#referral_id_" + id + " td:eq(8)").text().trim();
+            const cc = $("#referral_id_" + id + " td:eq(9)").text();
             const diagnosis = $("#referral_id_" + id + " td:eq(10)").text();
 
             const $modal = $("#patient_modal");
@@ -184,7 +184,7 @@
 
                 if (!confirm("Are you sure you want to tag this as done?")) return;
 
-                const ward  = $("#patient_modal #ward_input").val().trim();
+                const ward = $("#patient_modal #ward_input").val().trim();
                 const bedNo = $("#patient_modal #bed_no_input").val().trim();
 
                 $(this).prop("disabled", true);
@@ -236,11 +236,11 @@
 
                 const params = {
                     referring_hospital: $("#referral_id_" + referral_id + " td:eq(1)").text().trim(),
-                    patient:            $("#referral_id_" + referral_id + " td:eq(2)").text().trim(),
-                    age:                $("#referral_id_" + referral_id + " td:eq(3)").text().trim(),
-                    gender:             $("#referral_id_" + referral_id + " td:eq(4)").text().trim(),
-                    department:         department,
-                    remarks:            "QUEUED FROM TRIAGGE"
+                    patient: $("#referral_id_" + referral_id + " td:eq(2)").text().trim(),
+                    age: $("#referral_id_" + referral_id + " td:eq(3)").text().trim(),
+                    gender: $("#referral_id_" + referral_id + " td:eq(4)").text().trim(),
+                    department: department,
+                    remarks: "QUEUED FROM TRIAGGE"
                 };
 
                 $(this).prop("disabled", true);
@@ -264,6 +264,10 @@
                         const queueModal = getQueueModal();
                         if (queueModal) queueModal.hide();
                         toastr.success(data.message, "Information");
+
+                        insert(params.department, params.patient, function (message) {
+                            deleteChild(params.department);
+                        });
                     }).catch(err => {
                         $("#btn_confirm_queue").prop("disabled", false);
                         $("#btn_confirm_queue").html(`<i class="bi bi-list-check me-1"></i> Confirm Queue`);
@@ -281,11 +285,11 @@
 
             $("#btn_confirm_forward").off("click").on("click", function () {
                 $(".is-invalid").removeClass("is-invalid");
-                const topic      = $("#forward_department").val();
+                const topic = $("#forward_department").val();
                 const department = $("#forward_department").val();
-                const remarks    = $("#forward_remarks").val().trim();
-                const ward       = $("#patient_modal #ward_input").val().trim();
-                const bedNo      = $("#patient_modal #bed_no_input").val().trim();
+                const remarks = $("#forward_remarks").val().trim();
+                const ward = $("#patient_modal #ward_input").val().trim();
+                const bedNo = $("#patient_modal #bed_no_input").val().trim();
 
                 if (topic === "") {
                     $("#forward_department").addClass("is-invalid");
@@ -299,12 +303,12 @@
                 const patient = $("#referral_id_" + referral_id + " td:eq(2)").text().trim();
 
                 const params = {
-                    id:                 referral_id,
-                    department:         department,
-                    code:               topic,
-                    remarks:            remarks,
-                    ward:               ward,
-                    bed_no:             bedNo
+                    id: referral_id,
+                    department: department,
+                    code: topic,
+                    remarks: remarks,
+                    ward: ward,
+                    bed_no: bedNo
                 };
 
                 $(this).prop("disabled", true);
@@ -330,6 +334,11 @@
                         const modal = getPatientModal();
                         if (modal) modal.hide();
                         toastr.success(data.message, "Information");
+                        console.log(params);
+                        insert(params.code, patient, function (message) {
+                            deleteChild(params.code);
+                        });
+
                         getReferrals();
                     }).catch(err => {
                         $("#btn_confirm_forward").prop("disabled", false);

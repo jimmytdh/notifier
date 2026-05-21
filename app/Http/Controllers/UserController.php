@@ -24,14 +24,16 @@ class UserController extends Controller
             }
 
             session(['access_rights' => $user_priv->level]);
+            session(['code' => $user_priv->level]);
+            
             if ($user_priv->level == "EMED") {
                 session(['code' => "TRIAGGE"]);
             }
 
-            $department = Department::where('code', $user_priv->level)->first();
-            if ($department) {
-                session(['access_rights' => $department->code]);
-            }
+            // $department = Department::where('code', $user_priv->level)->first();
+            // if ($department) {
+            //     session(['access_rights' => $department->code]);
+            // }
 
             switch (session('code')) {
                 case "TRIAGGE":
