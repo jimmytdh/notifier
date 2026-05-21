@@ -872,7 +872,7 @@ class ReferralController extends Controller
     {
         try {
             $existing = DB::table('csmc_notifier.queue_referrals')
-                ->where('referring_hospital', $request->referringHospital)
+                ->where('referring_hospital', $request->referring_hospital)
                 ->where('patient', $request->patient)
                 ->whereNull('confirmed_at')
                 ->exists();
