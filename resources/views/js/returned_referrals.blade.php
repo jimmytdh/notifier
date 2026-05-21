@@ -282,7 +282,7 @@
             $("#btn_confirm_forward").off("click").on("click", function () {
                 $(".is-invalid").removeClass("is-invalid");
                 const topic      = $("#forward_department").val();
-                const department = $("#forward_department option:selected").text();
+                const department = $("#forward_department").val();
                 const remarks    = $("#forward_remarks").val().trim();
                 const ward       = $("#patient_modal #ward_input").val().trim();
                 const bedNo      = $("#patient_modal #bed_no_input").val().trim();
@@ -330,9 +330,6 @@
                         const modal = getPatientModal();
                         if (modal) modal.hide();
                         toastr.success(data.message, "Information");
-                        insert(topic, patient, function (message) {
-                            deleteChild(topic);
-                        });
                         getReferrals();
                     }).catch(err => {
                         $("#btn_confirm_forward").prop("disabled", false);
