@@ -31,4 +31,24 @@ Route::post('/queue_referral', [\App\Http\Controllers\ReferralController::class,
 Route::post('/send_push_notification', [\App\Http\Controllers\ReferralController::class, 'sendPushNotification']);
 Route::get('/get_all_referrals', [\App\Http\Controllers\ReferralController::class, 'getAllReferrals']);
 
+// ─── TEST ROUTES (remove before deploying to production) ───────────────────
+
+// Test with custom params via query string:
+// GET /api/test/push-notification?topic=referrals_TRIAGGE&hospital_referrer=Test+Hospital&patient=Juan+Dela+Cruz&age=35&sex=Male
+Route::get('/test/push-notification', [\App\Http\Controllers\ReferralController::class, 'sendPushNotification']);
+
+// Test with hardcoded sample data — hit this URL directly to fire a notification
+Route::get('/test/push-notification/sample', function (\Illuminate\Http\Request $request) {
+    $request->merge([
+        'topic' => 'referrals_' . $request->topic,
+        'hospital_referrer' => 'Sample Referring Hospital',
+        'patient' => 'Juan Dela Cruz',
+        'age' => 35,
+        'sex' => 'Male',
+    ]);
+    return (new \App\Http\Controllers\ReferralController())->sendPushNotificationPayload($request);
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+
 

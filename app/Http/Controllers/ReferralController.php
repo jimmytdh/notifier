@@ -775,12 +775,16 @@ class ReferralController extends Controller
             $payload = [
                 "message" => [
                     "topic" => $request->topic,
+                    "notification" => [
+                        "title" => "New Referral — " . $request->hospital_referrer,
+                        "body"  => $request->patient . ", " . $request->age . " y/o " . $request->sex,
+                    ],
                     "data" => [
                         "hospital_referrer" => $request->hospital_referrer,
-                        "patient" => $request->patient,
-                        "age" => $request->age,
-                        "sex" => $request->sex
-                    ]
+                        "patient"           => $request->patient,
+                        "age"               => (string) $request->age,
+                        "sex"               => $request->sex,
+                    ],
                 ]
             ];
 
@@ -826,12 +830,16 @@ class ReferralController extends Controller
             $payload = [
                 "message" => [
                     "topic" => $topic,
+                    "notification" => [
+                        "title" => "New Referral — " . $hospital_referrer,
+                        "body"  => $patient . ", " . $age . " y/o " . $sex,
+                    ],
                     "data" => [
                         "hospital_referrer" => $hospital_referrer,
-                        "patient" => $patient,
-                        "age" => (string) $age,
-                        "sex" => (string) $sex
-                    ]
+                        "patient"           => $patient,
+                        "age"               => (string) $age,
+                        "sex"               => (string) $sex,
+                    ],
                 ]
             ];
 
@@ -935,5 +943,65 @@ class ReferralController extends Controller
     }
 
 
+  public function sendPushNotificationPayload(Request $request)
+    {
+        try {
+            $request->validate([
+                'topic' => 'required|string',
+                'hospital_referrer' => 'required|string',
+                'patient' => 'required|string',
+                'age' => 'required|integer',
+                'sex' => 'required|string'
+            ]);
 
+            $bearer_token = 'Authorization: Bearer ' . $this->generateBearerToken();
+            $payload = [
+                "message" => [
+                    "topic" => $request->topic,
+                    "notification" => [
+                        "title" => "New Referral — " . $request->hospital_referrer,
+                        "body"  => $request->patient . ", " . $request->age . " y/o " . $request->sex,
+                    ],
+                    "data" => [
+                        "hospital_referrer" => $request->hospital_referrer,
+                        "patient"           => $request->patient,
+                        "age"               => (string) $request->age,
+                        "sex"               => $request->sex,
+                    ],
+                ]
+            ];
+
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://fcm.googleapis.com/v1/projects/notifier-5e4e8/messages:send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => json_encode($payload),
+                CURLOPT_HTTPHEADER => array(
+                    $bearer_token,
+                    'Content-Type: application/json'
+                ),
+                CURLOPT_SSL_VERIFYHOST => 0,
+                CURLOPT_SSL_VERIFYPEER => 0
+            ));
+
+            $response = curl_exec($curl);
+            if ($response === false) {
+                $error = curl_error($curl);
+                curl_close($curl);
+                return response()->json(['error' => $error], 500);
+            }
+
+            curl_close($curl);
+            return response()->json($response);
+        } catch (\Exception $exception) {
+            $this->insert_error(99999, "PUSH NOTIF=>" . $exception->getMessage());
+            return response()->json($exception->getMessage(), 500);
+        }
+    }
 }
