@@ -871,6 +871,19 @@ class ReferralController extends Controller
     public function store(Request $request)
     {
         try {
+            $existing = DB::table('csmc_notifier.queue_referrals')
+                ->where('referring_hospital', $request->referringHospital)
+                ->where('patient', $request->patient)
+                ->whereNull('confirmed_at')
+                ->exists();
+
+            if ($existing) {
+                return response()->json([
+                    'code' => 500,
+                    'message' => 'Patient is already queued'
+                ]);
+            }
+
             DB::table('csmc_notifier.queue_referrals')->insert([
                 'referring_hospital' => $request->referring_hospital,
                 'patient' => $request->patient,
