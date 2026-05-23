@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#f7f9fb",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary": "#29695b",
+                    "outline-variant": "#c3c6d1",
+                    "on-tertiary-fixed-variant": "#004f57",
+                    "status-info": "#58d7e8",
+                    "on-primary-fixed": "#001b3d",
+                    "surface-container-low": "#f2f4f6",
+                    "on-surface-variant": "#43474f",
+                    "tertiary-fixed": "#afedf6",
+                    "outline-subtle": "#c2c6d2",
+                    "surface-dim": "#d8dadc",
+                    "inverse-primary": "#a9c7ff",
+                    "surface": "#f7f9fb",
+                    "error": "#ba1a1a",
+                    "on-error-container": "#93000a",
+                    "on-secondary-fixed": "#00201a",
+                    "on-secondary-container": "#2e6d5f",
+                    "status-critical-container": "#ffdad6",
+                    "on-tertiary-fixed": "#001f23",
+                    "background": "#f7f9fb",
+                    "status-critical": "#ba1a1a",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-container": "#67a4ac",
+                    "surface-variant": "#e0e3e5",
+                    "on-tertiary": "#ffffff",
+                    "tertiary": "#002125",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "on-primary-fixed-variant": "#21477c",
+                    "tertiary-container": "#00383e",
+                    "on-background": "#191c1e",
+                    "primary-fixed": "#d6e3ff",
+                    "surface-tint": "#3c5f96",
+                    "inverse-on-surface": "#eff1f3",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-secondary-fixed-variant": "#055043",
+                    "status-new": "#29695b",
+                    "secondary-fixed": "#afefdd",
+                    "surface-container-high": "#e6e8ea",
+                    "secondary-fixed-dim": "#93d3c2",
+                    "on-surface-active": "#2e6d5f",
+                    "surface-active": "#acedda",
+                    "on-primary-container": "#799bd6",
+                    "primary-container": "#003166",
+                    "on-secondary": "#ffffff",
+                    "primary": "#001c40",
+                    "on-surface": "#191c1e",
+                    "outline": "#737781",
+                    "secondary-container": "#aceddb",
+                    "surface-container": "#eceef0",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#93d1da",
+                    "inverse-surface": "#2d3133"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "margin-desktop": "40px",
+                    "container-max": "1280px",
+                    "stack-lg": "24px",
+                    "stack-sm": "8px",
+                    "stack-md": "16px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "headline-sm": ["Manrope"],
+                    "caption-caps": ["Inter"],
+                    "headline-md": ["Manrope"],
+                    "label-bold": ["Inter"],
+                    "display-lg": ["Manrope"],
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-sm": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "caption-caps": ["10px", {"lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "display-lg": ["30px", {"lineHeight": "38px", "fontWeight": "700"}],
+                    "label-sm": ["11px", {"lineHeight": "14px", "fontWeight": "500"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .accent-bar { width: 6px; height: 100%; position: absolute; left: 0; top: 0; }
+        .hero-pattern {
+            background-image: radial-gradient(circle at 2px 2px, #c2c6d2 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-secondary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-surface border-b border-outline-subtle shadow-sm">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-16">
+<div class="flex items-center gap-stack-sm">
+<span class="material-symbols-outlined text-primary text-headline-md" data-icon="medical_services">medical_services</span>
+<span class="text-headline-md font-headline-md font-bold text-primary">Notifier</span>
+</div>
+<nav class="hidden md:flex gap-stack-lg items-center">
+<a class="text-primary font-bold font-label-bold text-label-bold" href="#">Home</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-bold text-label-bold" href="#">Solutions</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-bold text-label-bold" href="#">Facilities</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-bold text-label-bold" href="#">Security</a>
+</nav>
+<div class="flex items-center gap-stack-md">
+<button class="text-primary font-bold font-label-bold text-label-bold hover:text-secondary active:scale-95 transition-all" onclick="toggleModal('login-modal')">Login</button>
+<button class="bg-primary text-on-primary px-stack-md py-stack-sm rounded-lg font-label-bold text-label-bold hover:opacity-90 transition-all">Get Started</button>
+</div>
+</div>
+</header>
+<main class="pt-16">
+<!-- Hero Section -->
+<section class="relative overflow-hidden bg-surface-bright py-24 md:py-32 hero-pattern">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex flex-col md:flex-row items-center gap-12">
+<div class="flex-1 text-center md:text-left z-10">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full mb-6">
+<span class="material-symbols-outlined text-[16px]" data-icon="verified_user">verified_user</span>
+<span class="font-label-bold text-label-bold uppercase">Clinical Excellence Redefined</span>
+</div>
+<h1 class="font-display-lg text-display-lg md:text-[56px] md:leading-[64px] text-primary mb-6">
+                        Inter-departmental referrals <br class="hidden lg:block"/> <span class="text-secondary">made simple.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-xl mx-auto md:mx-0">
+                        The unified communication hub for hospital staff. Seamlessly coordinate patient transitions, track referral queues, and ensure HIPAA-compliant data exchange in real-time.
+                    </p>
+<div class="flex flex-col sm:flex-row gap-stack-md justify-center md:justify-start">
+<button class="bg-primary text-on-primary px-8 py-4 rounded-lg font-label-bold text-[16px] flex items-center justify-center gap-2 hover:shadow-lg transition-all active:scale-95">
+                            Get Started
+                            <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<button class="bg-surface-container-lowest border border-outline-subtle text-primary px-8 py-4 rounded-lg font-label-bold text-[16px] hover:bg-surface-container-low transition-all active:scale-95">
+                            View Demo
+                        </button>
+</div>
+</div>
+<div class="flex-1 relative">
+<div class="relative rounded-xl overflow-hidden shadow-2xl border border-outline-subtle bg-white">
+<img alt="Healthcare Dashboard" class="w-full h-auto" data-alt="A clean and professional digital interface of a medical dashboard displayed on a high-resolution monitor. The screen shows real-time patient referral lists, vibrant status indicators in teal and navy blue, and a structured sidebar. The background is a bright, modern hospital setting with soft lighting and clinical precision. The overall mood is clinical, efficient, and technologically advanced, echoing a corporate healthcare software environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5l2BmfJN6-yuQGTAIoIkx3lo5LPEgXgBM7iRi95JWYV2OATUi24MDU1l8BjmdRVDO3kuRKJU38lWOm-1Ba9yUuAaTwSXo2DxCLtAE2_rtsV4HfsbJVlScX7x1yoocIJt-YXPli_zM8i-KC68T5LK1npqp_jUo_rNtRI1-08m-r6M1igHKeknmPFUyV_L6mfCetZUXC1Q2PPSVBxLT8bwlLJn16ohw9NHLRoDfshgUj3eMIl9klImUv1qFI3A0YWWFHH0u66Ye7Mo"/>
+<div class="absolute top-4 left-4 right-4 flex gap-2">
+<div class="h-2 w-2 rounded-full bg-error"></div>
+<div class="h-2 w-2 rounded-full bg-status-info"></div>
+<div class="h-2 w-2 rounded-full bg-secondary"></div>
+</div>
+</div>
+<!-- Floating UI Card -->
+<div class="absolute -bottom-6 -left-6 bg-white p-4 rounded-xl shadow-lg border border-outline-subtle hidden lg:flex items-center gap-4 animate-bounce-slow">
+<div class="bg-status-critical-container p-3 rounded-full">
+<span class="material-symbols-outlined text-status-critical" data-icon="emergency">emergency</span>
+</div>
+<div>
+<p class="font-label-bold text-label-bold text-on-surface">Urgent Referral</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Trauma Ward - Incoming</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Social Proof -->
+<section class="bg-surface-container-low py-12 border-y border-outline-subtle">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center">
+<p class="font-label-bold text-label-bold text-on-surface-variant uppercase tracking-widest mb-8">Trusted by medical leaders</p>
+<div class="flex flex-wrap justify-center items-center gap-12 opacity-60 grayscale">
+<span class="text-headline-md font-bold text-primary">St. Jude Medical</span>
+<span class="text-headline-md font-bold text-primary">Mayo Clinic</span>
+<span class="text-headline-md font-bold text-primary">Cedars-Sinai</span>
+<span class="text-headline-md font-bold text-primary">Cleveland Clinic</span>
+</div>
+<p class="mt-8 text-body-md text-on-surface-variant">Join over <span class="font-bold text-primary">450 healthcare facilities</span> managing critical patient flows.</p>
+</div>
+</section>
+<!-- Feature Grid (Bento Style) -->
+<section class="py-24 bg-surface-bright">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="text-center mb-16">
+<h2 class="font-display-lg text-display-lg text-primary mb-4">Precision Engineered Features</h2>
+<p class="text-body-lg text-on-surface-variant max-w-2xl mx-auto">Designed for the high-stakes environment of modern clinical workflows.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-stack-lg">
+<!-- Real-time Notifications -->
+<div class="md:col-span-2 relative bg-surface-container-lowest rounded-xl p-stack-lg border border-outline-subtle shadow-sm hover:border-primary transition-all group overflow-hidden h-[400px]">
+<div class="accent-bar bg-status-info"></div>
+<div class="flex flex-col h-full">
+<div class="mb-6">
+<span class="material-symbols-outlined text-status-info text-[48px]" data-icon="notifications_active">notifications_active</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Real-time Notifications</h3>
+<p class="text-body-md text-on-surface-variant max-w-md">Zero-latency alerts for critical department transfers. Every millisecond counts when handling trauma referrals.</p>
+<div class="mt-auto pt-8">
+<img alt="Doctor using tablet" class="rounded-lg shadow-sm border border-outline-variant transform group-hover:scale-105 transition-transform duration-500" data-alt="A close-up photograph of a professional healthcare worker in scrubs holding a modern tablet device. The screen displays a vivid notification interface with clear typography and medical icons. The background is a brightly lit, clean hospital corridor with a soft blur, emphasizing clinical precision and reliability. The color palette is dominated by professional blues and clean whites." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDd2tAi0V7COETh7sL9R-3204pvLFhUFzVFpXNbc4m5CO-jbxW3BWuFxrz3CPBlTJDCpJRPgQVt5CECPbOwdAFZAKtMNBAC2ujHuVIs6YW7LLRed0lYBjO-HhAB_1VJOxuptROuVuWiLmouEItRcIK89G7FCES9UGwmw7wQk2Z_3qZZTUX0TykJOluEg2Sd6I7BH_BREty3HTsAU6uuGXX4sjVnc_LKB2gp7VZOqHDSDz1iJgx51spHuqTvVwDJoOlf06GQlfUwSOg"/>
+</div>
+</div>
+</div>
+<!-- Secure & HIPAA -->
+<div class="relative bg-primary rounded-xl p-stack-lg shadow-sm hover:opacity-95 transition-all overflow-hidden flex flex-col justify-end text-on-primary">
+<div class="absolute top-stack-lg left-stack-lg">
+<span class="material-symbols-outlined text-[64px] text-status-info" data-icon="security">security</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md mb-4">Secure &amp; HIPAA Compliant</h3>
+<p class="text-body-md opacity-80 mb-6">Enterprise-grade encryption and strict access controls ensure every patient record stays protected.</p>
+<span class="font-label-bold text-label-bold bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full uppercase">ISO 27001 Certified</span>
+</div>
+</div>
+<!-- Intelligent Queuing -->
+<div class="relative bg-surface-container-lowest rounded-xl p-stack-lg border border-outline-subtle shadow-sm hover:border-primary transition-all group h-[300px]">
+<div class="accent-bar bg-secondary"></div>
+<div class="mb-4">
+<span class="material-symbols-outlined text-secondary text-[40px]" data-icon="format_list_numbered">format_list_numbered</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2">Intelligent Queuing</h3>
+<p class="text-body-md text-on-surface-variant">Automated triage algorithms prioritize referrals based on clinical urgency and department capacity.</p>
+<div class="mt-8 flex gap-2">
+<div class="w-12 h-2 rounded-full bg-status-critical"></div>
+<div class="w-8 h-2 rounded-full bg-outline-variant"></div>
+<div class="w-16 h-2 rounded-full bg-outline-variant"></div>
+</div>
+</div>
+<!-- Department Analytics -->
+<div class="md:col-span-2 relative bg-surface-container-lowest rounded-xl p-stack-lg border border-outline-subtle shadow-sm hover:border-primary transition-all group flex flex-col md:flex-row items-center gap-stack-lg">
+<div class="accent-bar bg-primary"></div>
+<div class="flex-1">
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Department Analytics</h3>
+<p class="text-body-md text-on-surface-variant">Deep insights into referral patterns and bottlenecks to optimize hospital-wide operational efficiency.</p>
+<button class="mt-6 text-secondary font-bold flex items-center gap-2 hover:underline">
+                                Explore Analytics <span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+<div class="flex-1 w-full bg-surface-container-low rounded-lg p-4 border border-outline-variant h-40 flex items-end gap-2">
+<div class="flex-1 bg-primary h-[60%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary h-[85%] rounded-t-sm"></div>
+<div class="flex-1 bg-status-info h-[45%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary h-[95%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary h-[70%] rounded-t-sm"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="py-24 bg-primary text-on-primary">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center">
+<h2 class="font-display-lg text-display-lg mb-6">Ready to streamline your facility?</h2>
+<p class="text-body-lg opacity-80 mb-10 max-w-xl mx-auto">Get a personalized demo of Notifier and see how we can reduce your department transfer times by up to 35%.</p>
+<div class="flex flex-col sm:flex-row gap-stack-md justify-center">
+<button class="bg-secondary text-on-secondary px-10 py-4 rounded-lg font-label-bold text-[16px] hover:opacity-90 active:scale-95 transition-all">Schedule Demo</button>
+<button class="bg-transparent border border-outline-variant px-10 py-4 rounded-lg font-label-bold text-[16px] hover:bg-white/10 active:scale-95 transition-all">Contact Sales</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-outline-subtle py-stack-lg">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="mb-stack-lg md:mb-0">
+<div class="flex items-center gap-stack-sm mb-2">
+<span class="material-symbols-outlined text-primary text-headline-sm" data-icon="medical_services">medical_services</span>
+<span class="font-headline-sm text-headline-sm font-bold text-primary">Notifier</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">© 2024 Notifier Healthcare. All rights reserved.</p>
+</div>
+<div class="flex flex-wrap gap-stack-lg justify-center">
+<a class="text-on-surface-variant hover:text-primary hover:underline transition-all font-label-sm text-label-sm" href="#">Support</a>
+<a class="text-on-surface-variant hover:text-primary hover:underline transition-all font-label-sm text-label-sm" href="#">Legal</a>
+<a class="text-on-surface-variant hover:text-primary hover:underline transition-all font-label-sm text-label-sm" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant hover:text-primary hover:underline transition-all font-label-sm text-label-sm" href="#">Contact</a>
+</div>
+</div>
+</footer>
+<!-- Login Modal -->
+<div class="fixed inset-0 z-[100] hidden items-center justify-center p-4" id="login-modal">
+<div class="absolute inset-0 bg-primary/40 backdrop-blur-sm" onclick="toggleModal('login-modal')"></div>
+<div class="relative bg-surface-container-lowest w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-scale-in">
+<div class="p-8 border-b border-outline-subtle bg-surface-container-low">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">Healthcare Professional Login</h3>
+<p class="text-body-md text-on-surface-variant">Access your facility portal</p>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors" onclick="toggleModal('login-modal')">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+</div>
+<div class="p-8 space-y-6">
+<div>
+<label class="block font-label-bold text-label-bold text-on-surface mb-2">Employee ID / Email</label>
+<input class="w-full bg-surface-container-low border-0 rounded-lg p-3 focus:ring-2 focus:ring-primary focus:bg-white transition-all text-body-md" placeholder="ID-48293 or email@hospital.org" type="text"/>
+</div>
+<div>
+<label class="block font-label-bold text-label-bold text-on-surface mb-2">Password</label>
+<input class="w-full bg-surface-container-low border-0 rounded-lg p-3 focus:ring-2 focus:ring-primary focus:bg-white transition-all text-body-md" placeholder="••••••••" type="password"/>
+</div>
+<div class="flex items-center justify-between">
+<label class="flex items-center gap-2 text-body-md text-on-surface-variant">
+<input class="rounded border-outline text-secondary focus:ring-secondary" type="checkbox"/>
+                        Remember me
+                    </label>
+<a class="text-secondary font-label-bold text-label-bold hover:underline" href="#">Forgot password?</a>
+</div>
+<button class="w-full bg-primary text-on-primary py-4 rounded-lg font-label-bold text-[16px] hover:opacity-90 active:scale-[0.98] transition-all">Sign In</button>
+</div>
+<div class="p-4 bg-surface-container-low text-center">
+<p class="text-label-sm font-label-sm text-on-surface-variant">Secure biometric login available on mobile app</p>
+</div>
+</div>
+</div>
+<script>
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Close on ESC
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('[id$="-modal"]').forEach(modal => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                });
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+<style>
+        @keyframes scale-in {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-scale-in {
+            animation: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-slow 3s ease-in-out infinite;
+        }
+    </style>
+</body></html>

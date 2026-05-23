@@ -89,12 +89,6 @@
 @include('layouts.sidebar')
 @include('modals.settings')
 <main id="main" class="main">
-    <div class="pagetitle page-header">
-        <div>
-            <h1 id="page-title">@yield('Title', 'Patient Tracking')</h1>
-            <div class="page-subtitle" id="page-subtitle">@yield('Subtitle', 'Inter-department patient forwarding from external referrals with full tracking and department notifications.')</div>
-        </div>
-    </div>
     <section class="section dashboard">
         <div class="row g-3">
             <div id="spa-content" class="col-12 p-0">
@@ -141,7 +135,27 @@
 <script src="js/moment.min.js"></script>
 <script src="js/toastr.min.js"></script>
 <script src="https://code.responsivevoice.org/responsivevoice.js?key=kiFSuLiB"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .swal2-popup { font-family: 'Manrope', sans-serif !important; border-radius: 16px !important; }
+    .swal2-title { font-size: 18px !important; font-weight: 700 !important; color: #191c1e !important; }
+    .swal2-html-container { font-size: 13px !important; color: #424751 !important; }
+    .swal2-input { border-radius: 10px !important; border: 1px solid #c2c6d2 !important; font-size: 13px !important; }
+    .swal2-input:focus { border-color: #00478f !important; box-shadow: 0 0 0 3px rgba(0,71,143,.1) !important; }
+    .swal2-confirm, .swal2-cancel { border-radius: 9px !important; font-family: 'Manrope', sans-serif !important; font-size: 13px !important; font-weight: 700 !important; padding: 10px 22px !important; }
+    .swal2-cancel { background: #f2f4f6 !important; color: #424751 !important; }
+    .swal2-cancel:hover { background: #e0e3e5 !important; }
+    .swal2-container { z-index: 99999 !important; }
+    .swal2-backdrop-show { z-index: 99998 !important; }
+</style>
 <script>
+    // Prevent Bootstrap modal focus trap from stealing focus when SweetAlert is open
+    document.addEventListener('focusin', function (e) {
+        if (document.querySelector('.swal2-container')) {
+            e.stopImmediatePropagation();
+        }
+    }, true);
+
     const _DEPARTMENTS = ['PEDIA','IM','SURGERY','OB','ER','GS'];
     toastr.options = {
         "positionClass": "toast-bottom-right",

@@ -1,10 +1,11 @@
 <script>
     (function () {
-        let current_list = [];
+        let _store = {};
         let is_init = false;
         let is_searching = false;
         let referral_id;
         let page = 0;
+
         function getPatientModal() {
             const el = document.getElementById('patient_modal');
             if (!el || !window.bootstrap || !window.bootstrap.Modal) return null;
@@ -17,33 +18,60 @@
             return window.bootstrap.Modal.getOrCreateInstance(el);
         }
 
-        function getTypeBadge(type) {
-            const normalized = (type || "Referral").toString().trim().toLowerCase();
-            if (normalized === "manual") {
-                return `<span class="badge rounded-pill bg-warning text-dark">Manual</span>`;
+        function getAvatarSrc(age, sex) {
+            const a = parseInt(age, 10) || 0;
+            let ageGroup;
+            if (a <= 12) ageGroup = '0_12';
+            else if (a <= 59) ageGroup = '13_59';
+            else ageGroup = '60_plus';
+            const gender = (sex || '').toLowerCase().indexOf('f') !== -1 ? 'female' : 'male';
+            return 'assets/img/avatar_' + ageGroup + '_' + gender + '.png';
+        }
+
+        function getDeptChipHtml(dept) {
+            const d = (dept || '').toString().trim().toUpperCase();
+            if (d === 'ER' || d === 'EMERGENCY ROOM' || d === 'EMERGENCY') {
+                return `<span class="st-dept-tag st-dept-er">${dept}</span>`;
             }
-            return `<span class="badge rounded-pill bg-primary">Referral</span>`;
+            return `<span class="st-dept-tag st-dept-default">${dept || '-'}</span>`;
+        }
+
+        function getTimeAgo(dateStr) {
+            if (!dateStr) return '';
+            const now = moment();
+            const then = moment(dateStr);
+            const diff = now.diff(then, 'minutes');
+            if (diff < 1) return 'just now';
+            if (diff < 60) return diff + 'm ago';
+            const hrs = Math.floor(diff / 60);
+            if (hrs < 24) return hrs + 'h ago';
+            return Math.floor(hrs / 24) + 'd ago';
         }
 
         function getReferrals() {
             const patient = (String($("#search_patient").val() || "")).trim().toUpperCase();
+            _store = {};
             $("#referral_list").empty();
-            $("#referral_list").append("<tr><td colspan='10'>Loading data, please wait ...</td></tr>");
-            fetch('{{ route('getReferrals') }}?search_patient=' + patient +
-                "&page=" + page, {
-                method: "GET"
+            $("#referral_list").html(
+                `<div class="st-state-row"><i class="bi bi-arrow-repeat"></i><p>Loading data, please wait&hellip;</p></div>`
+            );
+            fetch('{{ route('getReferrals') }}?search_patient=' + encodeURIComponent(patient) + '&page=' + page, {
+                method: 'GET'
             })
                 .then(res => res.json())
                 .then(data => {
-                    $("#pagination_container").addClass("d-none")
+                    $("#pagination_container").addClass("d-none");
                     $("#referral_list").empty();
                     $("#btn_next").addClass("d-none");
+
                     if (data.results.length < 1) {
-                        $("#referral_list").append("<tr><td colspan='10'>No record found</td></tr>");
+                        $("#referral_list").html(
+                            `<div class="st-state-row"><i class="bi bi-inbox"></i><p>No record found</p></div>`
+                        );
                         return;
                     }
 
-                    $("#pagination_container").removeClass("d-none")
+                    $("#pagination_container").removeClass("d-none");
 
                     let max_visible = data.results.length;
                     if (max_visible == 11) {
@@ -51,39 +79,48 @@
                         $("#btn_next").removeClass("d-none");
                     }
 
-                    $("#page_items_count").text(((page * 10) + 1) + " - " + ((page * 10) + max_visible));
+                    $("#page_items_count").text(((page * 10) + 1) + ' - ' + ((page * 10) + max_visible));
+
                     for (let i = 0; i < max_visible; i++) {
                         const it = data.results[i];
-                        const ward = it.ward || "";
-                        const bedNo = it.bed_no || "";
-                        const wardDisplay = ward || "-";
-                        const bedDisplay = bedNo || "-";
-                        const tr = `<tr id="referral_id_` + it.id + `">
-                                        <td>` + getTypeBadge(it.type) + `</td>
-                                        <td>` + it.referring_hospital + `</td>
-                                        <td>` + it.patient + `</td>
-                                        <td>` + it.age + `</td>
-                                        <td>` + it.gender + `</td>
-                                        <td>` + wardDisplay + `</td>
-                                        <td>` + bedDisplay + `</td>
-                                        <td class="d-none" style="max-width: 100px;text-overflow:ellipsis;white-space: nowrap;overflow: hidden">` + it.chief_complaint + `</td>
-                                        <td class="d-none">` + it.diagnosis + `</td>
-                                        <td>` + it.department + `</td>
-                                        <td>` + moment(it.date_created).format("MM/DD/YYYY hh:mm:ss A") + `</td>
-                                        <td>
-                                            <button class='btn btn-sm' style="background: transparent" onClick='viewPatient("` + it.id + `")'>
-                                                <i class="bi bi-eye-fill text-success"></i>
-                                            </button>
-                                        </td>
-                                    </tr>`;
-                        $("#referral_list").append(tr);
-                    }
-                    data.results.forEach(it => {
+                        _store[it.id] = it;
 
-                    })
+                        const typeKey = (it.type || 'referral').toString().trim().toLowerCase();
+                        const typeLbl = typeKey === 'manual' ? 'Manual' : 'Referral';
+                        const avatarSrc = getAvatarSrc(it.age, it.gender);
+                        const deptHtml = getDeptChipHtml(it.department);
+                        const timeAgo = getTimeAgo(it.date_created);
+
+                        const card = `<div class="st-ref-card" id="referral_id_${it.id}" onclick="viewPatient('${it.id}')">
+                            <div class="st-card-accent"></div>
+                            <div class="st-card-hosp">
+                                <div class="st-hosp-name"><i class="bi bi-hospital-fill"></i><span>${it.referring_hospital || ''}</span></div>
+                                <span class="st-type-badge st-type-${typeKey}">${typeLbl}</span>
+                            </div>
+                            <div class="st-card-patient">
+                                <img src="${avatarSrc}" class="st-avatar" alt="">
+                                <div>
+                                    <p class="st-patient-name">${it.patient || ''}</p>
+                                    <div class="st-patient-meta">
+                                        <span>${it.age || ''} Y</span><span class="st-meta-dot"></span><span>${it.gender || ''}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="st-card-tags">
+                                ${deptHtml}
+                                <span class="st-time"><i class="bi bi-clock"></i> ${timeAgo}</span>
+                            </div>
+                            <div class="st-card-actions">
+                                <button class="st-btn-view" onclick="event.stopPropagation();viewPatient('${it.id}')">
+                                    <i class="bi bi-eye"></i> View Details
+                                </button>
+                            </div>
+                        </div>`;
+                        $("#referral_list").append(card);
+                    }
                 }).catch(err => {
-                console.log(err);
-            });
+                    console.log(err);
+                });
         }
 
         window.refreshReferrals = getReferrals;
@@ -91,83 +128,76 @@
         function getLogs(id) {
             $("#activity_logs").empty();
             fetch('{{ route('loadLogs') }}?id=' + id, {
-                method: "GET"
+                method: 'GET'
             })
                 .then(res => res.json())
                 .then(data => {
                     if (data.referral) {
-                        const ward = (data.referral.ward || "").toString().trim();
-                        const bedNo = (data.referral.bed_no || "").toString().trim();
+                        const ward = (data.referral.ward || '').toString().trim();
+                        const bedNo = (data.referral.bed_no || '').toString().trim();
                         $("#patient_modal #ward_input").val(ward);
                         $("#patient_modal #bed_no_input").val(bedNo);
                     }
                     const makeBadge = function (value, tone) {
                         if (!value) return `<span class="text-muted">-</span>`;
-                        const cls = tone || "bg-secondary";
+                        const cls = tone || 'bg-secondary';
                         return `<span class="badge rounded-pill ${cls}">${value}</span>`;
                     };
                     data.results.forEach(it => {
                         const tr = `<tr>
-                                        <td>` + it.origin + `</td>
-                                        <td>` + makeBadge(it.forwarded_by_name, "bg-success") + `</td>
-                                        <td>` + it.remarks + `</td>
-                                        <td>` + it.destination + `</td>
-                                        <td>` + makeBadge(it.tagged_by_name, "bg-info") + `</td>
-                                        <td>` + moment(it.date_forwarded).format("MM/DD/YYYY hh:mm:ss A") + `</td>
+                                        <td>${it.origin}</td>
+                                        <td>${makeBadge(it.forwarded_by_name, 'bg-success')}</td>
+                                        <td>${it.remarks}</td>
+                                        <td>${it.destination}</td>
+                                        <td>${makeBadge(it.tagged_by_name, 'bg-info')}</td>
+                                        <td>${moment(it.date_forwarded).format('MM/DD/YYYY hh:mm:ss A')}</td>
                                    </tr>`;
-
                         $("#activity_logs").append(tr);
                     });
                 }).catch(err => {
-                toastr.error(err, "Ooops");
-            });
+                    toastr.error(err, 'Ooops');
+                });
         }
 
         window.viewPatient = function (id) {
             referral_id = id;
+            const rec = _store[id] || {};
             const $modal = $("#patient_modal");
-            const patient = $("#referral_id_" + id + " td:eq(2)").text();
-            const age = $("#referral_id_" + id + " td:eq(3)").text();
-            const sex = $("#referral_id_" + id + " td:eq(4)").text();
-            const ward = $("#referral_id_" + id + " td:eq(5)").text().trim();
-            const bedNo = $("#referral_id_" + id + " td:eq(6)").text().trim();
-            const chief_complaint = $("#referral_id_" + id + " td:eq(7)").text();
-            const diagnosis = $("#referral_id_" + id + " td:eq(8)").text();
 
-            $modal.find("#patient").text(patient);
-            $modal.find("#age").text(age + " years old");
+            const age = rec.age || '';
+            const sex = rec.gender || '';
+            const ward = (rec.ward || '').toString().trim();
+            const bedNo = (rec.bed_no || '').toString().trim();
+
+            $modal.find("#employee_img").attr('src', getAvatarSrc(age, sex));
+            $modal.find("#patient").text(rec.patient || '');
+            $modal.find("#age").text(age + ' years old');
             $modal.find("#sex").text(sex);
-            $modal.find("#ward_input").val(ward === "-" ? "" : ward);
-            $modal.find("#bed_no_input").val(bedNo === "-" ? "" : bedNo);
-            $modal.find("#ward_input").prop("disabled", false);
-            $modal.find("#bed_no_input").prop("disabled", false);
-            $modal.find("#chief_complaint").text(chief_complaint);
-            $modal.find("#diagnosis").text(diagnosis);
+            $modal.find("#referring_hospital").text(rec.referring_hospital || '');
+            $modal.find("#date_referred").text(rec.date_created ? moment(rec.date_created).format('MMMM DD, YYYY hh:mm A') : '');
+            $modal.find("#ward_input").val(ward).prop('disabled', false);
+            $modal.find("#bed_no_input").val(bedNo).prop('disabled', false);
+            $modal.find("#chief_complaint").text(rec.chief_complaint || '');
+            $modal.find("#diagnosis").text(rec.diagnosis || '');
 
-            if (window.hoistModals) {
-                window.hoistModals();
-            }
-            if (window.cleanupModals) {
-                window.cleanupModals();
-            }
+            if (window.hoistModals) window.hoistModals();
+            if (window.cleanupModals) window.cleanupModals();
             const modal = getPatientModal();
             if (modal) modal.show();
             getLogs(id);
-        }
+        };
 
         function bindEvents() {
             $(".track-div").removeClass("d-none");
             $("#activity_container").removeClass("d-none");
             page = 0;
-            $("#search_patient").val("");
+            $("#search_patient").val('');
             const userCode = $("#user_code").text().trim();
             if (userCode) {
                 observe(userCode, function (snapshot) {
                     if (!is_init) return;
-
-                    toastr.success(snapshot.val(), "New incoming referral");
+                    toastr.success(snapshot.val(), 'New incoming referral');
                     responsiveVoice.speak('New incoming referral');
-
                     getReferrals();
                 });
 
@@ -176,7 +206,7 @@
                 });
             }
 
-            $("#patient_modal .card-body").prop("disabled", true);
+            $("#patient_modal .card-body").prop('disabled', true);
 
             $("#spa-content").off("click", "#btn_search").on("click", "#btn_search", function () {
                 page = 0;
@@ -206,16 +236,24 @@
             });
 
             $("#btn_done").off("click").on("click", function () {
-                let remarks = prompt("Remarks (optional):", "TAGGED AS DONE");
-                if (remarks === null) return;
-                remarks = remarks.trim();
-                if (remarks === "") remarks = "TAGGED AS DONE";
-                const ward = $("#patient_modal #ward_input").val().trim();
-                const bedNo = $("#patient_modal #bed_no_input").val().trim();
-
-                if (confirm("Are you sure you want to tag this as done?")) {
-                    $(this).prop("disabled", true);
-                    $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
+                const $btn   = $(this);
+                const ward   = $("#patient_modal #ward_input").val().trim();
+                const bedNo  = $("#patient_modal #bed_no_input").val().trim();
+                Swal.fire({
+                    title: 'Tag as Done',
+                    input: 'text',
+                    inputLabel: 'Remarks (optional)',
+                    inputValue: 'TAGGED AS DONE',
+                    inputPlaceholder: 'Enter remarks...',
+                    showCancelButton: true,
+                    confirmButtonText: 'Tag as Done',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#003166',
+                }).then(function (result) {
+                    if (!result.isConfirmed) return;
+                    const remarks = (result.value || '').trim() || 'TAGGED AS DONE';
+                    $btn.prop("disabled", true);
+                    $btn.html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
                     fetch('{{ route('tagAsDone') }}', {
                         method: "POST",
                         headers: {
@@ -224,28 +262,25 @@
                         },
                         body: JSON.stringify({id: referral_id, remarks: remarks, ward: ward, bed_no: bedNo})
                     })
-                        .then(res => res.json())
-                        .then(data => {
-                            $("#btn_done").prop("disabled", false);
-                            $("#btn_done").html("TAG AS DONE");
-                            if (data.code == 500) {
-                                toastr.error(data.message, "Ooops");
-                                return;
-                            }
-
-                    const row = $("#referral_id_" + referral_id);
-                    if (row.length) {
-                        row.find("td:eq(5)").text(ward || "-");
-                        row.find("td:eq(6)").text(bedNo || "-");
-                    }
-                    const modal = getPatientModal();
-                    if (modal) modal.toggle();
-                    toastr.success(data.message, "Information");
-                    getReferrals();
-                }).catch(err => {
+                    .then(res => res.json())
+                    .then(data => {
+                        $btn.prop("disabled", false);
+                        $btn.html("TAG AS DONE");
+                        if (data.code == 500) {
+                            toastr.error(data.message, "Ooops");
+                            const errModal = getPatientModal();
+                            if (errModal) errModal.hide();
+                            getReferrals();
+                            return;
+                        }
+                        const modal = getPatientModal();
+                        if (modal) modal.toggle();
+                        toastr.success(data.message, "Information");
+                        getReferrals();
+                    }).catch(err => {
                         console.log(err);
-                    })
-                }
+                    });
+                }); // end Swal.then
             });
 
             $("#btn_queue").off("click").on("click", function () {
@@ -254,20 +289,23 @@
                     return;
                 }
 
-                const referring_hospital = $("#referral_id_" + referral_id + " td:eq(1)").text().trim();
-                const patient = $("#referral_id_" + referral_id + " td:eq(2)").text().trim();
-                const age = $("#referral_id_" + referral_id + " td:eq(3)").text().trim();
-                const gender = $("#referral_id_" + referral_id + " td:eq(4)").text().trim();
-                const department = $("#referral_id_" + referral_id + " td:eq(9)").text().trim();
+                const rec = _store[referral_id] || {};
+                const referring_hospital = rec.referring_hospital || '';
+                const patient = rec.patient || '';
+                const age = rec.age || '';
+                const gender = rec.gender || '';
+                const department = rec.department || '';
                 const remarks = "QUEUED FROM " + $("#user_department").text().trim();
 
                 const params = {
                     referring_hospital: referring_hospital,
-                    patient: patient,
-                    age: age,
-                    gender: gender,
-                    department: department,
-                    remarks: remarks
+                    patient:            patient,
+                    age:                age,
+                    gender:             gender,
+                    department:         department,
+                    remarks:            remarks,
+                    diagnosis:          rec.diagnosis       || '',
+                    chief_complaint:    rec.chief_complaint || ''
                 };
 
                 $(this).prop("disabled", true);
@@ -288,13 +326,12 @@
                             toastr.error(data.message || "Unable to queue patient", "Error");
                             return;
                         }
-
                         toastr.success(data.message, "Information");
                     }).catch(err => {
-                    $("#btn_queue").prop("disabled", false);
-                    $("#btn_queue").html("QUEUE PATIENT");
-                    toastr.error(err.message || "Unable to queue patient", "Error");
-                });
+                        $("#btn_queue").prop("disabled", false);
+                        $("#btn_queue").html("QUEUE PATIENT");
+                        toastr.error(err.message || "Unable to queue patient", "Error");
+                    });
             });
 
             $("#btn_send").off("click").on("click", function () {
@@ -306,10 +343,11 @@
 
             $("#btn_confirm_forward").off("click").on("click", function () {
                 $(".is-invalid").removeClass("is-invalid");
-                const referring_hospital = $("#referral_id_" + referral_id + " td:eq(1)").text();
-                const patient = $("#referral_id_" + referral_id + " td:eq(2)").text();
-                const age = $("#referral_id_" + referral_id + " td:eq(3)").text();
-                const gender = $("#referral_id_" + referral_id + " td:eq(4)").text();
+                const rec = _store[referral_id] || {};
+                const referring_hospital = rec.referring_hospital || '';
+                const patient = rec.patient || '';
+                const age = rec.age || '';
+                const gender = rec.gender || '';
                 const ward = $("#patient_modal #ward_input").val().trim();
                 const bedNo = $("#patient_modal #bed_no_input").val().trim();
                 const remarks = $("#forward_remarks").val().trim();
@@ -338,7 +376,7 @@
                     ward: ward,
                     bed_no: bedNo,
                     remarks: remarks
-                }
+                };
 
                 $(this).prop("disabled", true);
                 $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
@@ -359,12 +397,6 @@
                             getReferrals();
                             return;
                         }
-
-                        const row = $("#referral_id_" + referral_id);
-                        if (row.length) {
-                            row.find("td:eq(5)").text(ward || "-");
-                            row.find("td:eq(6)").text(bedNo || "-");
-                        }
                         const forwardModal = getForwardModal();
                         if (forwardModal) forwardModal.hide();
                         const modal = getPatientModal();
@@ -375,10 +407,10 @@
                         });
                         getReferrals();
                     }).catch(err => {
-                    $("#btn_confirm_forward").prop("disabled", false);
-                    $("#btn_confirm_forward").html("Confirm Forward");
-                    toastr.error(err, "Ooops");
-                });
+                        $("#btn_confirm_forward").prop("disabled", false);
+                        $("#btn_confirm_forward").html("Confirm Forward");
+                        toastr.error(err, "Ooops");
+                    });
             });
         }
 

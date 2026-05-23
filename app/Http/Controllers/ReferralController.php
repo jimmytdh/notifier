@@ -879,6 +879,10 @@ class ReferralController extends Controller
     public function store(Request $request)
     {
         try {
+            if (empty(trim((string) $request->chief_complaint)) && empty(trim((string) $request->diagnosis))) {
+                return response()->json(['code' => 500, 'message' => 'No diagnosis and Chief Complaint passed']);
+            }
+
             $existing = DB::table('csmc_notifier.queue_referrals')
                 ->where('referring_hospital', $request->referring_hospital)
                 ->where('patient', $request->patient)
@@ -893,6 +897,8 @@ class ReferralController extends Controller
             }
 
             DB::table('csmc_notifier.queue_referrals')->insert([
+                'chief_complaint' => $request->chief_complaint,
+                'diagnosis' => $request->diagnosis,
                 'referring_hospital' => $request->referring_hospital,
                 'patient' => $request->patient,
                 'age' => $request->age,

@@ -14,36 +14,27 @@ class QueueController extends Controller
     public function index(Request $request)
     {
         try {
-            $patient = trim($request->search_patient ?? '');
-            $department = trim($request->search_department ?? '');
-            $page = max((int) $request->page, 0);
+            $department = strtoupper(trim($request->search_department ?? ''));
+
+            if (empty($department)) {
+                return response()->json(['results' => []]);
+            }
 
             $list = DB::table($this->tableName)
                 ->whereNull('confirmed_at')
-                ->where(function ($query) use ($department, $patient) {
-                    if ($patient != "") {
-                        $query->where("patient", "LIKE", "%" . $patient . "%");
-                    }
-
-                    if ($department != "") {
-                        if (strtoupper($department) === 'EMERGENCY ROOM') {
-                            $query->where(function ($subQuery) {
-                                $subQuery->where('department', 'LIKE', 'ER%')
-                                    ->orWhere('department', 'LIKE', '%EMERGENCY ROOM%');
-                            });
-                        } else {
-                            $query->where('department', '=', $department);
-                        }
-                    }
-                })
+                ->where('department', $department)
                 ->orderBy('created_at', 'asc')
-                ->skip($page * 10)
-                ->take(11)
                 ->select([
-                    'id', 'referring_hospital', 'patient', 'age', 'gender', 'department', 'remarks', 'created_at',
-                    DB::raw("(SELECT COUNT(*) + 1 FROM {$this->tableName} q2 WHERE q2.confirmed_at IS NULL AND (q2.created_at < queue_referrals.created_at OR (q2.created_at = queue_referrals.created_at AND q2.id < queue_referrals.id))) AS queue_position")
+                    'id', 'referring_hospital', 'patient', 'age', 'gender',
+                    'department', 'diagnosis', 'chief_complaint', 'remarks', 'created_at',
                 ])
-                ->get();
+                ->get()
+                ->values()
+                ->map(function ($item, $index) {
+                    $item->queue_position = $index + 1;
+                    return $item;
+                });
+
             return response()->json(['results' => $list]);
         } catch (\Exception $exception) {
             return response()->json(['error' => $exception->getMessage()], 500);
@@ -59,19 +50,23 @@ class QueueController extends Controller
         try {
             $request->validate([
                 'referring_hospital' => 'required|string|max:255',
-                'patient' => 'required|string|max:255',
-                'age' => 'nullable|max:50',
-                'gender' => 'nullable|string|max:50',
-                'department' => 'nullable|string|max:255',
-                'remarks' => 'nullable|string|max:255',
+                'patient'            => 'required|string|max:255',
+                'age'                => 'nullable|max:50',
+                'gender'             => 'nullable|string|max:50',
+                'department'         => 'nullable|string|max:255',
+                'diagnosis'          => 'nullable|string',
+                'chief_complaint'    => 'nullable|string',
+                'remarks'            => 'nullable|string|max:255',
             ]);
 
             $referringHospital = strtoupper(trim($request->referring_hospital));
-            $patient = strtoupper(trim($request->patient));
-            $department = $request->department ? strtoupper(trim($request->department)) : null;
-            $gender = $request->gender ? strtoupper(trim($request->gender)) : null;
-            $age = ($request->age !== null && $request->age !== '') ? trim((string)$request->age) : null;
-            $remarks = $request->remarks ? trim($request->remarks) : null;
+            $patient           = strtoupper(trim($request->patient));
+            $department        = $request->department ? strtoupper(trim($request->department)) : null;
+            $gender            = $request->gender    ? strtoupper(trim($request->gender))     : null;
+            $age               = ($request->age !== null && $request->age !== '') ? trim((string) $request->age) : null;
+            $remarks           = $request->remarks         ? trim($request->remarks)         : null;
+            $diagnosis         = $request->diagnosis       ? trim($request->diagnosis)       : null;
+            $chief_complaint   = $request->chief_complaint ? trim($request->chief_complaint) : null;
 
             $existing = DB::table($this->tableName)
                 ->where('referring_hospital', $referringHospital)
@@ -94,6 +89,8 @@ class QueueController extends Controller
                 'department' => $department,
                 'queued_by' => Auth::id(),
                 'remarks' => $remarks,
+                'diagnosis' => $diagnosis,
+                'chief_complaint' => $chief_complaint,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ]);

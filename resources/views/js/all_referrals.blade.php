@@ -341,20 +341,24 @@
                     if (!data) return;
                     params = {
                         referring_hospital: data.referring_hospital || '',
-                        patient: data.patient || '',
-                        age: String(data.age || ''),
-                        gender: data.sex || data.gender || '',
-                        department: department,
-                        remarks: "QUEUED FROM TRIAGGE"
+                        patient:            data.patient            || '',
+                        age:                String(data.age         || ''),
+                        gender:             data.sex || data.gender || '',
+                        department:         department,
+                        remarks:            "QUEUED FROM TRIAGGE",
+                        diagnosis:          data.diagnosis                            || '',
+                        chief_complaint:    data.chiefComplaint || data.chief_complaint || ''
                     };
                 } else {
                     params = {
                         referring_hospital: $("#referral_id_" + current_db_id + " td:eq(1)").text().trim(),
-                        patient: $("#referral_id_" + current_db_id + " td:eq(2)").text().trim(),
-                        age: $("#referral_id_" + current_db_id + " td:eq(3)").text().trim(),
-                        gender: $("#referral_id_" + current_db_id + " td:eq(4)").text().trim(),
-                        department: department,
-                        remarks: "QUEUED FROM TRIAGGE"
+                        patient:            $("#referral_id_" + current_db_id + " td:eq(2)").text().trim(),
+                        age:                $("#referral_id_" + current_db_id + " td:eq(3)").text().trim(),
+                        gender:             $("#referral_id_" + current_db_id + " td:eq(4)").text().trim(),
+                        department:         department,
+                        remarks:            "QUEUED FROM TRIAGGE",
+                        chief_complaint:    $("#referral_id_" + current_db_id + " td:eq(7)").text().trim(),
+                        diagnosis:          $("#referral_id_" + current_db_id + " td:eq(8)").text().trim()
                     };
                 }
 
