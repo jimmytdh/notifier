@@ -171,7 +171,7 @@
 
                     for (let i = 0; i < max_visible; i++) {
                         const it = data.results[i];
-                        const tr = `<tr id="referral_id_${it.id}">
+                        const tr = `<tr id="referral_id_${it.id}" data-type="${it.type || ''}">
                                         <td>${getTypeBadge(it.type)}</td>
                                         <td>${it.referring_hospital || ''}</td>
                                         <td>${it.patient || ''}</td>
@@ -323,6 +323,11 @@
                     toastr.error("No selected patient", "Error");
                     return;
                 }
+                let queueType = 'Referral';
+                if (current_source === 'db' && current_db_id) {
+                    queueType = $("#referral_id_" + current_db_id).data("type") || '';
+                }
+                if (window.setQueueDeptOptions) window.setQueueDeptOptions(queueType);
                 $("#queue_dept_select").val("").removeClass("is-invalid");
                 const queueModal = getQueueModal();
                 if (queueModal) queueModal.show();

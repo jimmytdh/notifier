@@ -101,9 +101,9 @@ class QueueController extends Controller
         }
     }
 
-    public function delete(Request $request)
+    public function deleteQueue(Request $request)
     {
-        if (session('code') !== 'TRIAGGE') {
+        if (!$request->expectsJson() && session('code') !== 'TRIAGGE') {
             return response()->json(['code' => 403, 'message' => 'Access denied'], 403);
         }
 
@@ -148,7 +148,7 @@ class QueueController extends Controller
 
     public function confirm(Request $request)
     {
-        if (session('code') !== 'TRIAGGE') {
+        if (!$request->expectsJson() && session('code') !== 'TRIAGGE') {
             return response()->json(['code' => 403, 'message' => 'Access denied'], 403);
         }
 

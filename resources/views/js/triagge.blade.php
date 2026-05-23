@@ -305,6 +305,7 @@
                 toastr.error("Patient not found", "Error");
                 return;
             }
+            if (window.setQueueDeptOptions) window.setQueueDeptOptions('Referral');
             $("#queue_dept_select").val("").removeClass("is-invalid");
             const queueModal = getQueueModal();
             if (queueModal) queueModal.show();
@@ -405,6 +406,7 @@
                     toastr.error("No selected patient", "Error");
                     return;
                 }
+                if (window.setQueueDeptOptions) window.setQueueDeptOptions('Referral');
                 $("#queue_dept_select").val("").removeClass("is-invalid");
                 const queueModal = getQueueModal();
                 if (queueModal) queueModal.show();

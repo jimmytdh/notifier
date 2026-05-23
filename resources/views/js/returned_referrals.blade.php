@@ -275,6 +275,8 @@
                     toastr.error("No selected patient", "Error");
                     return;
                 }
+                const rec = _store[referral_id] || {};
+                if (window.setQueueDeptOptions) window.setQueueDeptOptions(rec.type);
                 $("#queue_dept_select").val("").removeClass("is-invalid");
                 const queueModal = getQueueModal();
                 if (queueModal) queueModal.show();

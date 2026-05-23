@@ -508,6 +508,25 @@
         }
         window.populateDepartmentSelects = populateDepartmentSelects;
 
+        const REFERRAL_QUEUE_DEPTS = ['IM', 'SURGERY', 'OB', 'PEDIA'];
+
+        window.setQueueDeptOptions = function (type) {
+            const select = document.getElementById('queue_dept_select');
+            if (!select) return;
+            const isReferral = !type || type.toString().trim().toLowerCase() !== 'manual';
+            const depts = isReferral
+                ? window._departments.filter(function (d) { return REFERRAL_QUEUE_DEPTS.indexOf((d.code || '').toUpperCase()) !== -1; })
+                : window._departments;
+            while (select.options.length > 1) select.remove(1);
+            depts.forEach(function (dept) {
+                const opt = document.createElement('option');
+                opt.value = dept.code;
+                opt.textContent = dept.department;
+                select.appendChild(opt);
+            });
+            select.value = '';
+        };
+
         function loadDepartments() {
             fetch('{{ route('getDepartments') }}')
                 .then(function (res) { return res.json(); })

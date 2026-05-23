@@ -82,9 +82,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/get_returned_referrals', [\App\Http\Controllers\ReferralController::class, 'getReturnedReferrals'])->name('getReturnedReferrals');
     Route::get('/get_queue', [\App\Http\Controllers\QueueController::class, 'index'])->name('getQueue');
     Route::get('/load_logs', [\App\Http\Controllers\ReferralController::class, 'loadLogs'])->name('loadLogs');
-    Route::delete('/delete/referral', [\App\Http\Controllers\QueueController::class, 'delete'])->name('deleteQueue');
+    
     Route::post('/insert_queue', [\App\Http\Controllers\QueueController::class, 'store'])->name('insertQueue');
     Route::post('/confirm_queue', [\App\Http\Controllers\QueueController::class, 'confirm'])->name('confirmQueue');
+    Route::delete('/delete_queue', [\App\Http\Controllers\QueueController::class, 'deleteQueue'])->name('deleteQueue');
     Route::get('/queue_archives', function () { return view('queue_archives'); })->name('queue_archives');
     Route::get('/get_queue_archives', [\App\Http\Controllers\QueueController::class, 'archives'])->name('getQueueArchives');
     Route::get('/get_departments', [\App\Http\Controllers\DepartmentController::class, 'get_departments'])->name('getDepartments');
