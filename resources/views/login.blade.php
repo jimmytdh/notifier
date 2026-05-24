@@ -582,9 +582,6 @@
                 <button class="ln-hero-cta" data-bs-toggle="modal" data-bs-target="#loginModal">
                     Get Started <i class="bi bi-arrow-right"></i>
                 </button>
-                <a class="{{ route('download') }}" class="ln-hero-outline">
-                    <i class="bi bi-android2"></i> Download App
-                </a>
             </div>
         </div>
         <div class="ln-hero-visual">
