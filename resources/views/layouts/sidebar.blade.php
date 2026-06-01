@@ -170,6 +170,12 @@
                 <span>Returned Referrals</span>
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link {{ $routeName == 'manual_referral' ? 'active' : 'collapsed' }}" href="{{ route('manual_referral') }}">
+                <i class="bi bi-pencil-square"></i>
+                <span>Manual Referral</span>
+            </a>
+        </li>
         @else
         <li class="nav-item">
             <a class="nav-link {{ $routeName == 'referrals' ? 'active' : 'collapsed' }}" href="{{ route('referrals') }}">
