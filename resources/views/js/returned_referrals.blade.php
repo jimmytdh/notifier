@@ -1,5 +1,6 @@
 <script>
     (function () {
+        let _store = {};
         let referral_id;
         let page = 0;
 
@@ -21,18 +22,43 @@
             return window.bootstrap.Modal.getOrCreateInstance(el);
         }
 
-        function getTypeBadge(type) {
-            const normalized = (type || 'Referral').toString().trim().toLowerCase();
-            if (normalized === 'manual') {
-                return `<span class="badge rounded-pill bg-warning text-dark">Manual</span>`;
+        function getAvatarSrc(age, sex) {
+            const a = parseInt(age, 10) || 0;
+            let ageGroup;
+            if (a <= 12) ageGroup = '0_12';
+            else if (a <= 59) ageGroup = '13_59';
+            else ageGroup = '60_plus';
+            const gender = (sex || '').toLowerCase().indexOf('f') !== -1 ? 'female' : 'male';
+            return 'assets/img/avatar_' + ageGroup + '_' + gender + '.png';
+        }
+
+        function getDeptChipHtml(dept) {
+            const d = (dept || '').toString().trim().toUpperCase();
+            if (d === 'ER' || d === 'EMERGENCY ROOM' || d === 'EMERGENCY') {
+                return `<span class="st-dept-tag st-dept-er">${dept}</span>`;
             }
-            return `<span class="badge rounded-pill bg-primary">Referral</span>`;
+            return `<span class="st-dept-tag st-dept-default">${dept || '-'}</span>`;
+        }
+
+        function getTimeAgo(dateStr) {
+            if (!dateStr) return '';
+            const now = moment();
+            const then = moment(dateStr);
+            const diff = now.diff(then, 'minutes');
+            if (diff < 1) return 'just now';
+            if (diff < 60) return diff + 'm ago';
+            const hrs = Math.floor(diff / 60);
+            if (hrs < 24) return hrs + 'h ago';
+            return Math.floor(hrs / 24) + 'd ago';
         }
 
         function getReferrals() {
             const patient = (String($("#search_patient").val() || '')).trim().toUpperCase();
+            _store = {};
             $("#referral_list").empty();
-            $("#referral_list").append("<tr><td colspan='9'>Loading data, please wait ...</td></tr>");
+            $("#referral_list").html(
+                `<div class="st-state-row"><i class="bi bi-arrow-repeat"></i><p>Loading data, please wait&hellip;</p></div>`
+            );
             fetch('{{ route('getReturnedReferrals') }}?search_patient=' + encodeURIComponent(patient) + '&page=' + page, {
                 method: 'GET'
             })
@@ -43,7 +69,9 @@
                     $("#btn_next").addClass("d-none");
 
                     if (!data.results || data.results.length < 1) {
-                        $("#referral_list").append("<tr><td colspan='9'>No record found</td></tr>");
+                        $("#referral_list").html(
+                            `<div class="st-state-row"><i class="bi bi-inbox"></i><p>No record found</p></div>`
+                        );
                         return;
                     }
 
@@ -59,28 +87,40 @@
 
                     for (let i = 0; i < max_visible; i++) {
                         const it = data.results[i];
-                        const ward = it.ward || '';
-                        const bedNo = it.bed_no || '';
-                        const tr = `<tr id="referral_id_${it.id}">
-                                        <td>${getTypeBadge(it.type)}</td>
-                                        <td>${it.referring_hospital || ''}</td>
-                                        <td>${it.patient || ''}</td>
-                                        <td>${it.age || ''}</td>
-                                        <td>${it.gender || ''}</td>
-                                        <td>${ward || '-'}</td>
-                                        <td>${bedNo || '-'}</td>
-                                        <td class="d-none">${ward}</td>
-                                        <td class="d-none">${bedNo}</td>
-                                        <td class="d-none">${it.chief_complaint || ''}</td>
-                                        <td class="d-none">${it.diagnosis || ''}</td>
-                                        <td>${moment(it.date_created).format('MM/DD/YYYY hh:mm:ss A')}</td>
-                                        <td>
-                                            <button class='btn btn-sm' style="background:transparent" onClick='viewPatient("${it.id}")'>
-                                                <i class="bi bi-eye-fill text-success"></i>
-                                            </button>
-                                        </td>
-                                    </tr>`;
-                        $("#referral_list").append(tr);
+                        _store[it.id] = it;
+
+                        const typeKey = (it.type || 'referral').toString().trim().toLowerCase();
+                        const typeLbl = typeKey === 'manual' ? 'Manual' : 'Referral';
+                        const avatarSrc = getAvatarSrc(it.age, it.gender);
+                        const deptHtml = getDeptChipHtml(it.department);
+                        const timeAgo = getTimeAgo(it.date_created);
+
+                        const card = `<div class="st-ref-card" id="referral_id_${it.id}" onclick="viewPatient('${it.id}')">
+                            <div class="st-card-accent"></div>
+                            <div class="st-card-hosp">
+                                <div class="st-hosp-name"><i class="bi bi-hospital-fill"></i><span>${it.referring_hospital || ''}</span></div>
+                                <span class="st-type-badge st-type-${typeKey}">${typeLbl}</span>
+                            </div>
+                            <div class="st-card-patient">
+                                <img src="${avatarSrc}" class="st-avatar" alt="">
+                                <div>
+                                    <p class="st-patient-name">${it.patient || ''}</p>
+                                    <div class="st-patient-meta">
+                                        <span>${it.age || ''} Y</span><span class="st-meta-dot"></span><span>${it.gender || ''}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="st-card-tags">
+                                ${deptHtml}
+                                <span class="st-time"><i class="bi bi-clock"></i> ${timeAgo}</span>
+                            </div>
+                            <div class="st-card-actions">
+                                <button class="st-btn-view" onclick="event.stopPropagation();viewPatient('${it.id}')">
+                                    <i class="bi bi-eye"></i> View Details
+                                </button>
+                            </div>
+                        </div>`;
+                        $("#referral_list").append(card);
                     }
                 }).catch(err => {
                     console.log(err);
@@ -120,22 +160,24 @@
 
         window.viewPatient = function (id) {
             referral_id = id;
-            const patient = $("#referral_id_" + id + " td:eq(2)").text();
-            const age = $("#referral_id_" + id + " td:eq(3)").text();
-            const sex = $("#referral_id_" + id + " td:eq(4)").text();
-            const ward = $("#referral_id_" + id + " td:eq(7)").text().trim();
-            const bedNo = $("#referral_id_" + id + " td:eq(8)").text().trim();
-            const cc = $("#referral_id_" + id + " td:eq(9)").text();
-            const diagnosis = $("#referral_id_" + id + " td:eq(10)").text();
-
+            const rec = _store[id] || {};
             const $modal = $("#patient_modal");
-            $modal.find("#patient").text(patient);
-            $modal.find("#age").text(age + " years old");
+
+            const age = rec.age || '';
+            const sex = rec.gender || '';
+            const ward = (rec.ward || '').toString().trim();
+            const bedNo = (rec.bed_no || '').toString().trim();
+
+            $modal.find("#employee_img").attr('src', getAvatarSrc(age, sex));
+            $modal.find("#patient").text(rec.patient || '');
+            $modal.find("#age").text(age + ' years old');
             $modal.find("#sex").text(sex);
-            $modal.find("#ward_input").val(ward).prop("disabled", false);
-            $modal.find("#bed_no_input").val(bedNo).prop("disabled", false);
-            $modal.find("#chief_complaint").text(cc);
-            $modal.find("#diagnosis").text(diagnosis);
+            $modal.find("#referring_hospital").text(rec.referring_hospital || '');
+            $modal.find("#date_referred").text(rec.date_created ? moment(rec.date_created).format('MMMM DD, YYYY hh:mm A') : '');
+            $modal.find("#ward_input").val(ward).prop('disabled', false);
+            $modal.find("#bed_no_input").val(bedNo).prop('disabled', false);
+            $modal.find("#chief_complaint").text(rec.chief_complaint || '');
+            $modal.find("#diagnosis").text(rec.diagnosis || '');
 
             if (window.hoistModals) window.hoistModals();
             if (window.cleanupModals) window.cleanupModals();
@@ -148,7 +190,7 @@
             $(".track-div").removeClass("d-none");
             $("#activity_container").removeClass("d-none");
             page = 0;
-            $("#search_patient").val("");
+            $("#search_patient").val('');
 
             $("#spa-content").off("click", "#btn_search").on("click", "#btn_search", function () {
                 page = 0;
@@ -177,18 +219,25 @@
 
             // TAG AS DONE
             $("#btn_done").off("click").on("click", function () {
-                let remarks = prompt("Remarks (optional):", "TAGGED AS DONE");
-                if (remarks === null) return;
-                remarks = remarks.trim();
-                if (remarks === "") remarks = "TAGGED AS DONE";
-
-                if (!confirm("Are you sure you want to tag this as done?")) return;
-
-                const ward = $("#patient_modal #ward_input").val().trim();
+                const $btn = $(this);
+                const ward  = $("#patient_modal #ward_input").val().trim();
                 const bedNo = $("#patient_modal #bed_no_input").val().trim();
+                Swal.fire({
+                    title: 'Tag as Done',
+                    input: 'text',
+                    inputLabel: 'Remarks (optional)',
+                    inputValue: 'TAGGED AS DONE',
+                    inputPlaceholder: 'Enter remarks...',
+                    showCancelButton: true,
+                    confirmButtonText: 'Tag as Done',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#003166',
+                }).then(function (result) {
+                    if (!result.isConfirmed) return;
+                    const remarks = (result.value || '').trim() || 'TAGGED AS DONE';
 
-                $(this).prop("disabled", true);
-                $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
+                $btn.prop("disabled", true);
+                $btn.html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
                 fetch('{{ route('tagAsDone') }}', {
                     method: "POST",
                     headers: {
@@ -203,6 +252,9 @@
                         $("#btn_done").html(`<i class="bi bi-check2-circle me-1"></i>TAG AS DONE`);
                         if (data.code == 500) {
                             toastr.error(data.message, "Ooops");
+                            const errModal = getPatientModal();
+                            if (errModal) errModal.hide();
+                            getReferrals();
                             return;
                         }
                         const modal = getPatientModal();
@@ -210,10 +262,11 @@
                         toastr.success(data.message, "Information");
                         getReferrals();
                     }).catch(err => {
-                        $("#btn_done").prop("disabled", false);
-                        $("#btn_done").html(`<i class="bi bi-check2-circle me-1"></i>TAG AS DONE`);
+                        $btn.prop("disabled", false);
+                        $btn.html(`<i class="bi bi-check2-circle me-1"></i>TAG AS DONE`);
                         toastr.error(err, "Ooops");
                     });
+                }); // end Swal.then
             });
 
             // QUEUE PATIENT
@@ -222,6 +275,8 @@
                     toastr.error("No selected patient", "Error");
                     return;
                 }
+                const rec = _store[referral_id] || {};
+                if (window.setQueueDeptOptions) window.setQueueDeptOptions(rec.type);
                 $("#queue_dept_select").val("").removeClass("is-invalid");
                 const queueModal = getQueueModal();
                 if (queueModal) queueModal.show();
@@ -234,13 +289,16 @@
                     return;
                 }
 
+                const rec = _store[referral_id] || {};
                 const params = {
-                    referring_hospital: $("#referral_id_" + referral_id + " td:eq(1)").text().trim(),
-                    patient: $("#referral_id_" + referral_id + " td:eq(2)").text().trim(),
-                    age: $("#referral_id_" + referral_id + " td:eq(3)").text().trim(),
-                    gender: $("#referral_id_" + referral_id + " td:eq(4)").text().trim(),
-                    department: department,
-                    remarks: "QUEUED FROM TRIAGGE"
+                    referring_hospital: rec.referring_hospital || '',
+                    patient:            rec.patient            || '',
+                    age:                rec.age                || '',
+                    gender:             rec.gender             || '',
+                    department:         department,
+                    remarks:            "QUEUED FROM TRIAGGE",
+                    diagnosis:          rec.diagnosis          || '',
+                    chief_complaint:    rec.chief_complaint    || ''
                 };
 
                 $(this).prop("disabled", true);
@@ -300,7 +358,8 @@
                     return;
                 }
 
-                const patient = $("#referral_id_" + referral_id + " td:eq(2)").text().trim();
+                const rec = _store[referral_id] || {};
+                const patient = rec.patient || '';
 
                 const params = {
                     id: referral_id,
@@ -327,6 +386,11 @@
                         $("#btn_confirm_forward").html("Confirm Forward");
                         if (data.code == 500) {
                             toastr.error(data.message, "Ooops");
+                            const errFwd = getForwardModal();
+                            if (errFwd) errFwd.hide();
+                            const errPat = getPatientModal();
+                            if (errPat) errPat.hide();
+                            getReferrals();
                             return;
                         }
                         const forwardModal = getForwardModal();
